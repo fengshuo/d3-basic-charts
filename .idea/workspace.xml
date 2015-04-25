@@ -41,14 +41,24 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="area-chart.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="area-chart.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/demo/js/area-chart.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.6682243">
-              <caret line="199" column="0" selection-start-line="199" selection-start-column="0" selection-end-line="199" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.0">
+              <caret line="181" column="16" selection-start-line="181" selection-start-column="16" selection-end-line="181" selection-end-column="16" />
               <folding>
                 <element signature="e#4709#5184#0" expanded="false" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="README.md" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/README.md">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.026474128">
+              <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -72,6 +82,7 @@
         <option value="$PROJECT_DIR$/demo/css/area-chart.css" />
         <option value="$PROJECT_DIR$/demo/area-chart.html" />
         <option value="$PROJECT_DIR$/demo/js/area-chart.js" />
+        <option value="$PROJECT_DIR$/README.md" />
       </list>
     </option>
   </component>
@@ -205,6 +216,7 @@
     <property name="HbShouldOpenHtmlAsHb" value="" />
     <property name="recentsLimit" value="5" />
     <property name="restartRequiresConfirmation" value="true" />
+    <property name="SearchEverywhereHistoryKey" value="read&#9;FILE&#9;file:///Users/fengshuo/Documents/dev_fs/d3-basic-charts/README.md" />
   </component>
   <component name="RunManager" selected="JavaScript Debug.d3-basic-chart">
     <configuration default="true" type="JavascriptDebugType" factoryName="JavaScript Debug">
@@ -218,6 +230,9 @@
     </list>
   </component>
   <component name="ShelveChangesManager" show_recycled="false" />
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="a704819d-a3fd-4fcc-afd4-ade2b54e834e" name="Default" comment="" />
@@ -313,11 +328,19 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/demo/js/area-chart.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6682243">
-          <caret line="199" column="0" selection-start-line="199" selection-start-column="0" selection-end-line="199" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.0">
+          <caret line="181" column="16" selection-start-line="181" selection-start-column="16" selection-end-line="181" selection-end-column="16" />
           <folding>
             <element signature="e#4709#5184#0" expanded="false" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.026474128">
+          <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
