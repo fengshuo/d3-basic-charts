@@ -85,10 +85,10 @@ window.onload = function(){
 
 
     // there is only on path for this chart
-    //svg.append("path")
-    //  .datum(data) //use data for static, one time data bound
-    //  .attr("d",areaGenerator)
-    //  .attr("class","area");
+    svg.append("path")
+      .datum(data) //use data for static, one time data bound
+      .attr("d",areaGenerator)
+      .attr("class","area");
 
     // below code won't work, because:
 
@@ -132,11 +132,12 @@ window.onload = function(){
           })
 
 
-      indicatorGroup.on("mouseover",function(d){
+      indicatorGroup.on("mouseenter",function(d){
+              var data = [d]; // the data should be an array
+          // position for tooltip
+          var xPos = parseFloat(xScale(d.date) + margin.left );
+          var yPos = parseFloat(yScale(d.close));
 
-              var data = [d];
-
-              svg.selectAll(".indicator-line").remove();
               d3.select(this).selectAll(".horizontal-line")
                     .data(data)
                     .enter()
@@ -178,7 +179,23 @@ window.onload = function(){
                   .attr("class","indicator-line")
                   .attr("stroke-width","1.5")
                   .attr("stroke","black");
-          });
+
+              // show tooltip
+              d3.select("#tooltip")
+                  .classed("hide",false)
+                  .style({
+                      "left": (xPos - 30) + "px", // it's not flexible, should use the xScaled width/2
+                      "top":  yPos + "px"
+                  })
+                  .html(function(){
+                      return '<p>Date: ' + d3.time.format("%Y-%m-%d")(d.date) + '</p><p>Close: ' + d.close;
+                  })
+
+          })
+          .on("mouseout", function(d){
+              svg.selectAll(".indicator-line").remove();
+              d3.select("#tooltip").classed("hide",true)
+          })
 
 
 
