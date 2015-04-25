@@ -33,7 +33,7 @@ window.onload = function(){
   var xAxis = d3.svg.axis()
               .scale(xScale)
               .orient("bottom")
-              .tickFormat(d3.time.format("%Y-%m"))
+              .tickFormat(d3.time.format("%Y-%m"));
               // use time format for ticks
 
   var yAxis = d3.svg.axis()
@@ -108,7 +108,7 @@ window.onload = function(){
       var line = svg.append("path")
           .datum(data)
           .attr("d",lineGenerator)
-          .attr("class", "line")
+          .attr("class", "line");
 
       // add scatterplot for indicators
 
@@ -116,7 +116,7 @@ window.onload = function(){
           .data(data)
           .enter()
           .append("g")
-          .attr("class","indicator-group")
+          .attr("class","indicator-group");
 
 
       var circles =  indicatorGroup.append("circle")
@@ -127,9 +127,9 @@ window.onload = function(){
               "cy": function(d){
                   return yScale(d.close)
               },
-              "r": "3px",
+              "r": "4.5px",
               "class":"indicator-dot"
-          })
+          });
 
 
       indicatorGroup.on("mouseenter",function(d){
@@ -138,7 +138,7 @@ window.onload = function(){
           var xPos = parseFloat(xScale(d.date) + margin.left );
           var yPos = parseFloat(yScale(d.close));
 
-              d3.select(this).selectAll(".horizontal-line")
+              d3.select(this).selectAll(".horizontal-line") // as long as you are selectAll sth doesn't exist
                     .data(data)
                     .enter()
                     .append("line")
@@ -154,9 +154,8 @@ window.onload = function(){
                             return yScale(d.close);
                         }
                     })
-                  .attr("class","indicator-line")
-                  .attr("stroke-width","1.5")
-                  .attr("stroke","black");
+                  .attr("class","indicator-line");
+
 
               d3.select(this).selectAll(".vertical-Line")
                   .data(data)
@@ -176,18 +175,18 @@ window.onload = function(){
                           return yScale(d.close);
                       }
                   })
-                  .attr("class","indicator-line")
-                  .attr("stroke-width","1.5")
-                  .attr("stroke","black");
+                  .attr("class","indicator-line");
+
 
               // show tooltip
               d3.select("#tooltip")
                   .classed("hide",false)
                   .style({
                       "left": (xPos - 30) + "px", // it's not flexible, should use the xScaled width/2
-                      "top":  yPos + "px"
+                      "top":  (yPos + 50) + "px"
                   })
                   .html(function(){
+                      // use time format to handle the Date
                       return '<p>Date: ' + d3.time.format("%Y-%m-%d")(d.date) + '</p><p>Close: ' + d.close;
                   })
 
@@ -195,7 +194,7 @@ window.onload = function(){
           .on("mouseout", function(d){
               svg.selectAll(".indicator-line").remove();
               d3.select("#tooltip").classed("hide",true)
-          })
+          });
 
 
 
