@@ -5,7 +5,7 @@ window.onload = function(){
     right:30,
     bottom:35,
     left:50
-  }
+  };
 
   var width = 960 - margin.left - margin.right;
   var height = 600 - margin.top - margin.bottom;
@@ -40,14 +40,12 @@ window.onload = function(){
               .scale(yScale)
               .orient("left");
 
-  // area constructor
-
 
   // date formatter
   var dateParser = d3.time.format("%Y/%m/%d").parse;
 
   // load data
-  d3.csv("../../data/BaiduNasdaq.csv",function(d){
+  d3.csv("../data/BaiduNasdaq.csv",function(d){
     // accessor function is very useful to handle raw data
     return {
       date:dateParser(d.date),
@@ -74,8 +72,15 @@ window.onload = function(){
                         .y1(function(d){
                           return yScale(d.close);
                           // remember to add Scale!
-                        })
+                        });
 
+    var lineGenerator = d3.svg.line()
+                        .x(function(d){
+                                return xScale(d.date);
+                        })
+                        .y(function(d){
+                                return yScale(d.close);
+                        });
 
 
 
@@ -83,7 +88,7 @@ window.onload = function(){
     svg.append("path")
       .datum(data) //use data for static, one time data bound
       .attr("d",areaGenerator)
-      .attr("class","area")
+      .attr("class","area");
 
     // below code won't work, because:
 
@@ -98,6 +103,12 @@ window.onload = function(){
     //     .append("path")
     //     .attr("d",areaGenerator)
     //     .attr("class","area")
+
+      // add a line on the edge of the area
+      svg.append("path")
+          .datum(data)
+          .attr("d",lineGenerator)
+          .attr("class", "line");
 
     // append axis
     // x axis
