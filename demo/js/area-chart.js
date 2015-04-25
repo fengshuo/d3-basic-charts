@@ -49,7 +49,7 @@ window.onload = function(){
     // accessor function is very useful to handle raw data
     return {
       date:dateParser(d.date),
-      close:+d.close
+      close:+d.close // numbers
     }
   },function(err,data){
 
@@ -60,7 +60,7 @@ window.onload = function(){
 
     yScale.domain([0, d3.max(data,function(d){
       return d.close;
-    })])
+    })]);
 
     // area generator
     var areaGenerator = d3.svg.area()
