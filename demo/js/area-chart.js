@@ -85,10 +85,10 @@ window.onload = function(){
 
 
     // there is only on path for this chart
-    svg.append("path")
-      .datum(data) //use data for static, one time data bound
-      .attr("d",areaGenerator)
-      .attr("class","area");
+    //svg.append("path")
+    //  .datum(data) //use data for static, one time data bound
+    //  .attr("d",areaGenerator)
+    //  .attr("class","area");
 
     // below code won't work, because:
 
@@ -105,10 +105,82 @@ window.onload = function(){
     //     .attr("class","area")
 
       // add a line on the edge of the area
-      svg.append("path")
+      var line = svg.append("path")
           .datum(data)
           .attr("d",lineGenerator)
-          .attr("class", "line");
+          .attr("class", "line")
+
+      // add scatterplot for indicators
+
+      var indicatorGroup = svg.selectAll("g")
+          .data(data)
+          .enter()
+          .append("g")
+          .attr("class","indicator-group")
+
+
+      var circles =  indicatorGroup.append("circle")
+          .attr({
+              "cx": function(d){
+                  return xScale(d.date)
+              },
+              "cy": function(d){
+                  return yScale(d.close)
+              },
+              "r": "3px",
+              "class":"indicator-dot"
+          })
+
+
+      indicatorGroup.on("mouseover",function(d){
+
+              var data = [d];
+
+              svg.selectAll(".indicator-line").remove();
+              d3.select(this).selectAll(".horizontal-line")
+                    .data(data)
+                    .enter()
+                    .append("line")
+                    .attr({
+                        "x1":0,
+                        "y1": function(d){
+                            return yScale(d.close);
+                        },
+                        "x2": function(d){
+                            return xScale(d.date)
+                        },
+                        "y2":  function(d){
+                            return yScale(d.close);
+                        }
+                    })
+                  .attr("class","indicator-line")
+                  .attr("stroke-width","1.5")
+                  .attr("stroke","black");
+
+              d3.select(this).selectAll(".vertical-Line")
+                  .data(data)
+                  .enter()
+                  .append("line")
+                  .attr({
+                      "x1": function(d){
+                          return xScale(d.date)
+                      },
+                      "y1": function(d){
+                          return yScale(0);
+                      },
+                      "x2": function(d){
+                          return xScale(d.date)
+                      },
+                      "y2":  function(d){
+                          return yScale(d.close);
+                      }
+                  })
+                  .attr("class","indicator-line")
+                  .attr("stroke-width","1.5")
+                  .attr("stroke","black");
+          });
+
+
 
     // append axis
     // x axis
