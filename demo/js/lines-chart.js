@@ -110,6 +110,23 @@ window.onload = function(){
 				return color(d.type); //map color
 			});
 
+		groups.append("text")
+			.datum(function(d){
+				// this is more flexible since the position is based on data itself
+				return {
+					type: d.type,
+					value: d.values[0] // notice the latest data is the first in source
+				}
+			})
+			.attr("transform",function(d){
+				return "translate(" + xScale(d.value.date) + "," + yScale(d.value.index) + ")"
+			})
+			.text(function(d){
+				return d.type;
+			})
+
+
+
 		// render axis
 		svg.append("g")
 			.attr("class","axis x")
