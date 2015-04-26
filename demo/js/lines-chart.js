@@ -52,6 +52,7 @@ window.onload = function(){
 		}
 	}, function(data){
 
+		// the default domain for color is empty
 		// update domain for ordinal colors
 		// color.domain(["close","open","high","low"]);
 
