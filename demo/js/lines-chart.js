@@ -51,10 +51,20 @@ window.onload = function(){
 			low: +d.low
 		}
 	}, function(data){
-		// update domain for ordinal colors
-		color.domain(["close","open","high","low"]);
 
-		// reconstruct data based on color domain
+		// update domain for ordinal colors
+		// color.domain(["close","open","high","low"]);
+
+		// this is more flexible
+		color.domain(d3.keys(data[0]).filter(function(key){
+			return key!== 'date';
+		}));
+
+		// d3.keys: return an array containing the property names of the object
+		// return a new selection that only contains the elements for which
+		// the specified selector is true, the selector may be a function or a string
+
+		// *reconstruct* data based on color domain
 		var stocks = color.domain().map(function(name){
 			return {
 				type: name,
