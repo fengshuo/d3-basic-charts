@@ -97,7 +97,7 @@ window.onload = function(){
 		// append lines
 		// line generator
 		var lineGenerator = d3.svg.line()
-							.interpolate("basis")
+							.interpolate("basis") // different kinds of interpolate, basis will ignore extreme points
 			.x(function(d){
 				return xScale(d.date); //don't forget the scales here!
 			})
