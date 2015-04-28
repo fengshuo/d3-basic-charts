@@ -1,35 +1,35 @@
 window.onload = function(){
   // margin convention
   var margin = {
-    top:30,
-    right: 30,
-    bottom: 50,
-    left:50
+	top:30,
+	right: 30,
+	bottom: 50,
+	left:50
   };
 
   var width = 960 - margin.left - margin.right;
   var height = 600 - margin.top - margin.bottom;
 
   var svg = d3.select("body").append("svg")
-            attr({
-              "width": width + margin.left + margin.right,
-              "height": height + margin.top + margin.bottom
-            })
-          .append("g")
-            .attr("transform","translate(" + margin.left + "," + marigin.top + ")");
+			.attr({
+			  "width": width + margin.left + margin.right,
+			  "height": height + margin.top + margin.bottom
+			})
+		  .append("g")
+			.attr("transform","translate(" + margin.left + "," + margin.top + ")");
 
   // scale and axe
   var xScale = d3.time.scale()
-                .range([0,width]);
+				.range([0,width]);
   var yScale = d3.scale.linear()
-                .range([height,0]);
+				.range([height,0]);
 
   var xAxis = d3.svg.axis()
-              .scale(xScale)
-              .orient("bottom");
+			  .scale(xScale)
+			  .orient("bottom");
   var yAxis = d3.svg.axis()
-              .scale(yScale)
-              .orient("left");
+			  .scale(yScale)
+			  .orient("left");
 
   // date formatter
   var dateParser = d3.time.format("%y-%b-%d").parse;
@@ -39,51 +39,113 @@ window.onload = function(){
 
   // load data
   d3.csv("../data/browsers.csv", function(err,data){
-    if(err){
-      console.log(err)
-    }else {
-      // update x domain
+	if(err){
+	  console.log(err)
+	}else {
+		// Format date
+		// not using the accessor function of csv this time
+		data.forEach(function(d){
+			d.date = dateParser(d.date);
+		});
+
+	  // update  domain
+	  xScale.domain(d3.extent(data, function(d){
+		  return d.date;
+	  }));
+
+
+	  // update colors domain
+	  // use key and filter to return an array
+	  color.domain(d3.keys(data[0]).filter(function(key){
+		return key !== 'date'
+	  }));
+
+	  // stack(layers) computes the y baseline for each layer in layers, and then
+	  // propagete that baseline to the other layers
+	  // for x,y, you can define accessor functions, otherwise it will use the default
+	  // which means by default assumes that each input value has a y attribute
+		var stack = d3.layout.stack()
+			.values(function(d){  // values is an accessor function
+				return d.values;
+			});
+
+		// reconstruct data so that it will have layers
+
+		var newData = color.domain().map(function(name){
+			return {
+				name: name,
+				values: data.map(function(d){
+					return {
+						x: d.date,
+						y: +d[name]
+					}
+				})
+			}
+		});
+
+		console.log(newData)
+
+		var bData = stack(newData);
+		// in newData
+		// x:date, y:41.62
+		// x:date, y:22.26
+		// in bData, it looks like this (computes by stack)
+		// x: date, y:41.62, y0:0
+		// x:date, y:22.26, y0:41.62
+
+		console.log(bData)
+
+		// accumulate y max
+		var accumulate = [];
+		newData.map(function(n){
+			accumulate.push(d3.max(n.values, function(v){
+				return v.y;
+			}))
+		});
+
+		// update y domain
+		yScale.domain([
+			0,
+			d3.sum(accumulate)
+		]);
 
 
 
-      // update colors domain
-      // use key and filter to return an array
-      color.domain(d3.keys(data[0]).filter(function(key){
-        return key !== 'date'
-      }));
+		// based on the bData, let's define area generator
+		var areaGenerator = d3.svg.area()
+			.x(function(d){
+				return xScale(d.x);
+			})
+			.y0(function(d){
+				return yScale(d.y0);
+			})
+			.y1(function(d){
+				return yScale(d.y0 + d.y);
+			});
 
-      // Format date
-      // not using the accessor function of csv this time
-      data.forEach(function(d){
-        d.date = dateParser(d.date);
-      });
+		var groups = svg.selectAll(".groups")
+			.data(bData)
+			.enter()
+			.append("g")
+			.attr("class","group");
 
-      // reconstructe data
-      // an array of array, one array stands for one category
-      var newData = color.domain().map(function(name){
-        return {
-          name: name,
-          bvalues: data.map(function(d){
-            return {
-              date: d.date,
-              index: d[name]
-            }
-          })
-        }
-      });
+		groups.append("path")
+			.attr("d", function(d){return areaGenerator(d.values)}) //values in bData
+			.attr("class","area")
+			.style("fill", function(d){
+				return color(d.name); //don't forget the color
+			});
 
-      // stack layout
-      // chained with a values since the layers should be
-      // a two-demensional array of values
-      var stack = d3.layout.stack()
-                  .values(function(d){
-                    return d.bvalues;
-                  });
-
-
+		// append axis
+		svg.append("g")
+			.attr("class", "x axis")
+			.attr("transform", "translate(0," + height + ")")
+			.call(xAxis);
+		svg.append("g")
+			.attr("class", "y axis")
+			.call(yAxis);
 
 
-
-    }
+	}
   })
 }
