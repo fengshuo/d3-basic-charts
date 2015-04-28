@@ -132,6 +132,42 @@ window.onload = function(){
 			.attr("class","axis y")
 			.call(yAxis);
 
+		// add legends
+		var legend = svg.selectAll(".legend")
+								.data(color.domain())
+								.enter()
+							.append("g")
+								.attr("transform", function(d,i){
+									return "translate(" + (width-150) + "," + i*20 + ")";
+								})
+
+				legend.append("rect")
+					.attr({
+						"x":0,
+						"width":15,
+						"height":15
+					})
+					.style("fill", function(d){
+						return color(d);
+					});
+
+		//console.log(color.range().slice(0, color.domain().length))
+		//console.log(color.domain().slice().reverse())
+
+		legend.append("text")
+					.attr({
+						"x": 20,
+						"y": 10,
+					})
+					.text(function(d){
+						return d;
+					})
+
+
+
+
+
+
 
 	})
 
