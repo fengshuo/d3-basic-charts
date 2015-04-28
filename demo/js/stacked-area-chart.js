@@ -71,13 +71,25 @@ window.onload = function(){
 
 		// reconstruct data so that it will have layers
 
+		//var newData = color.domain().map(function(name){
+		//	return {
+		//		name: name,
+		//		values: data.map(function(d){
+		//			return {
+		//				x: d.date,
+		//				y: +d[name]
+		//			}
+		//		})
+		//	}
+		//});
+
 		var newData = color.domain().map(function(name){
 			return {
 				name: name,
 				values: data.map(function(d){
 					return {
 						x: d.date,
-						y: +d[name]
+						y: d[name]/100
 					}
 				})
 			}
@@ -104,10 +116,10 @@ window.onload = function(){
 		});
 
 		// update y domain
-		yScale.domain([
-			0,
-			d3.sum(accumulate)
-		]);
+		//yScale.domain([
+		//	0,
+		//	d3.sum(accumulate)
+		//]);
 
 
 
