@@ -35,7 +35,8 @@ window.onload = function(){
 							.scale(yScale)
 							.orient("left")
 							.tickFormat(d3.format(".2s"));
-							// format numbers
+							// TODO:format numbers
+
 
 	// color
 	var color = d3.scale.category20();
@@ -59,7 +60,7 @@ window.onload = function(){
 				return {
 					name: name,
 					y0: y0,
-					y1: y0 += +d[name] // pay attention to how this line of code update y0 and y1
+					y1: y0 += +d[name] // pay attention to how this line of code update y0 and y1 based on data
 				}
 			});
 
@@ -68,8 +69,15 @@ window.onload = function(){
 		});
 
 		// sort
+		// data.sort(function(a,b){
+		// 	return b.total - a.total;
+		// })
+
 		data.sort(function(a,b){
-			return b.total - a.total;
+			return d3.ascending(a.total,b.total);
+			// ascending:
+			// This is the comparator function for natural order,
+			// and can be used in conjunction with the built-in array sort method to arrange elements in ascending order
 		})
 
 		// after data reconstruction
@@ -85,7 +93,6 @@ window.onload = function(){
 			})
 		]);
 
-		console.log(data)
 
 		// add elements
 		var group = svg.selectAll(".state")
@@ -141,18 +148,16 @@ window.onload = function(){
 									return "translate(" + (width-150) + "," + i*20 + ")";
 								})
 
-				legend.append("rect")
-					.attr({
-						"x":0,
-						"width":15,
-						"height":15
-					})
-					.style("fill", function(d){
-						return color(d);
-					});
+		legend.append("rect")
+			.attr({
+				"x":0,
+				"width":15,
+				"height":15
+			})
+			.style("fill", function(d){
+				return color(d);
+			});
 
-		//console.log(color.range().slice(0, color.domain().length))
-		//console.log(color.domain().slice().reverse())
 
 		legend.append("text")
 					.attr({
@@ -162,12 +167,6 @@ window.onload = function(){
 					.text(function(d){
 						return d;
 					})
-
-
-
-
-
-
 
 	})
 
