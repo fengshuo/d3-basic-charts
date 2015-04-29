@@ -35,7 +35,6 @@ window.onload = function(){
 							.orient("left")
 							.tickFormat(formatter)
 
-	
 
 	d3.csv("../data/letters.csv", function(err,data){
 		// update domain
@@ -66,7 +65,8 @@ window.onload = function(){
 										return height - yScale(d.frequency);
 									},
 									"width": xScale.rangeBand()
-								});
+								})
+								.style("fill","steelblue")
 
 		svg.append("g")
 			.attr("class","x axis")
@@ -75,7 +75,13 @@ window.onload = function(){
 
 		svg.append("g")
 			.attr("class","y axis")
-			.call(yAxis);
+			.call(yAxis)
+			// add on y axis
+		.append("text")
+			.attr("transform","rotate(-90)")
+			.attr("y",15)
+			.attr("text-anchor","end")
+			.text("Frequency")
 
 	})
 
