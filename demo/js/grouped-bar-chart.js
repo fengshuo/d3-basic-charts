@@ -128,6 +128,30 @@ window.onload = function(){
 		svg.append("g")
 				.attr("class","y axis")
 				.call(yAxis);
-				
+
+		// add legends
+		var legend = svg.selectAll(".legend")
+									.data(groups)
+									.enter()
+								.append("g")
+									.attr("transform",function(d,i){
+										return "translate(35"+","+ i*30 + ")"
+									});
+		legend.append("rect")
+					.attr({
+						"width":20,
+						"height":20
+					})
+					.style("fill", function(d){
+						return color(d)
+					});
+
+		legend.append("text")
+					.attr("x",25)
+					.attr("y",12)
+					.text(function(d){
+						return d;
+					});
+
 	})
 };
