@@ -26,6 +26,13 @@ window.onload = function(){
 	var yScale = d3.scale.linear()
 								.range([height,0]);
 
+	var xAxis = d3.svg.axis()
+							.scale(xScale)
+							.orient("bottom");
+	var yAxis = d3.svg.axis()
+							.scale(yScale)
+							.orient("left")
+							.tickFormat(d3.format(".2s"))
 
 
 	d3.csv("../data/population.csv",function(d){
@@ -46,7 +53,7 @@ window.onload = function(){
 		var state = svg.selectAll(".state")
 				.data(data)
 				.enter()
-			.append("svg")
+			.append("svg") // you can't append rect in rect! use svg instead
 				.attr({
 					"width":xScale.rangeBand(),
 					"x": function(d){
@@ -113,6 +120,14 @@ window.onload = function(){
 						return color(d.name)
 					})
 
-
+		// append axis
+		svg.append("g")
+				.attr("class","x axis")
+				.attr("transform","translate(0,"+height+")")
+				.call(xAxis);
+		svg.append("g")
+				.attr("class","y axis")
+				.call(yAxis);
+				
 	})
 };
