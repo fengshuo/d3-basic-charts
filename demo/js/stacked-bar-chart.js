@@ -34,8 +34,11 @@ window.onload = function(){
 	var yAxis = d3.svg.axis()
 							.scale(yScale)
 							.orient("left")
-							.tickFormat(d3.format(".2s"));
+							//.tickFormat(d3.format(".2s"));
 							// TODO:format numbers
+
+							// this is for normalized stacked chart
+							.tickFormat(d3.format("%"))
 
 
 	// color
@@ -51,8 +54,10 @@ window.onload = function(){
 
 		// reconstruct data
 		// doesn't need d3.layout.stack in this case
+		console.log(data);
 
 		data.forEach(function(d){
+			// organize data not the coordinate in chart
 			var y0 = 0;
 			// add new keys
 			d.ages = color.domain().map(function(name){
@@ -64,9 +69,20 @@ window.onload = function(){
 				}
 			});
 
+			// to normalized(100%) to percentage
+			// use the y0 number at the end of the loop
+			// that is the sum
+			d.ages.forEach(function(d){
+				d.y0 /= y0;
+				d.y1 /= y0
+			})
+
 			// use total for sorting and yScale
 			d.total = d.ages[d.ages.length-1].y1;
+
 		});
+
+		//console.log(data)
 
 		// sort
 		// data.sort(function(a,b){

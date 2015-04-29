@@ -1,4 +1,4 @@
-window.onload = function(){
+// window.onload = function(){
   // margin convention
   var margin = {
     top:50,
@@ -195,7 +195,6 @@ window.onload = function(){
               svg.selectAll(".indicator-line").remove();
               d3.select("#tooltip").classed("hide",true)
           });
-
 
 
     // append axis

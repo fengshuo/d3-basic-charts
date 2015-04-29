@@ -66,7 +66,7 @@ window.onload = function(){
 									},
 									"width": xScale.rangeBand()
 								})
-								.style("fill","steelblue")
+								// .style("fill","steelblue")
 
 		svg.append("g")
 			.attr("class","x axis")
