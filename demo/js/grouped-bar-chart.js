@@ -53,7 +53,7 @@ window.onload = function(){
 		var state = svg.selectAll(".state")
 				.data(data)
 				.enter()
-			.append("svg") // you can't append rect in rect! use svg instead
+			.append("g") // you can't append rect in rect! use group is better
 				.attr({
 					"width":xScale.rangeBand(),
 					"x": function(d){
