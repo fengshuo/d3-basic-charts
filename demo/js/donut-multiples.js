@@ -1,6 +1,5 @@
 window.onload = function(){
-	var width = 150;
-	var height = 150;
+
 	var radius = 70;
 
 	var svg = d3.select("body");
@@ -21,18 +20,19 @@ window.onload = function(){
 		}));
 
 
-		// return value is an array of arc descriptors
-
 		var donutLayout = d3.layout.pie()
 			.value(function(d){
 				return d.population;
+				// use population to draw, but d also has the name data
+				// for labels
 			});
 
 		var arcGenerator = d3.svg.arc()
 			.innerRadius(40)
 			.outerRadius(70);
 
-		// reconstruct data, add a new key for age group values
+		// organize data, add a new key for age group values
+		// (instead of reconstruction the data per se)
 		data.forEach(function(d){
 			d.values = color.domain().map(function(c){
 				return {
@@ -40,27 +40,41 @@ window.onload = function(){
 					population: +d[c]
 				}
 			})
-		})
+		});
 
 		var group = svg.selectAll(".donut")
 				.data(data)
-				.enter()
+			// but with label info
+			// although the label data is not necessary for the shape itself
+				.enter() // generate donut for each state
 			.append("svg")
+			// use svg to wrap instead of g, because g needs translate
 				.attr({
 					"width": radius*2,
 					"height": radius*2
 				})
 			// or else the center will be the top left corner
+			// let's take it as:
+			// the donut will draw based on the parent's (0,0)
+			// thus part of the donut is not visible initially
+			// however we can append g and use translate to solve this
+			// and also, the text is added in the (0,0) point
 			.append("g")
 				.attr("transform","translate("+radius+","+radius+")")
 
 
 		group.selectAll(".arc")
 			.data(function(d){
+				// use layout to handle data
+				console.log(donutLayout(d.values))
 				return donutLayout(d.values);
+				// return value is an array of arc descriptors
 			})
 			.enter()
 			.append("path")
+			// use generator to draw with the target data
+			// population is returned by donutLayout as value
+			// and with shape data and origin data
 			.attr("d",arcGenerator)
 			.attr("class","arc")
 			.style("fill",function(d){
@@ -71,7 +85,7 @@ window.onload = function(){
 			.attr("text-anchor","middle")
 			.text(function(d){
 				return d.State;
-			})
+			});
 
 
 
