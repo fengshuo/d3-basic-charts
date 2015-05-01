@@ -24,11 +24,18 @@ window.onload = function(){
 
 	d3.csv("../data/donut.csv",function(data){
 
-		var arcGenerator = d3.svg.arc()
-			.innerRadius(100)
-			.outerRadius(200);
+		// donut chart
+		//var arcGenerator = d3.svg.arc()
+		//	.innerRadius(100)
+		//	.outerRadius(200);
 			// if these accessor function is not specified
 			// there should be innerRadius and outerRadius in data
+
+
+		// pie chart
+		var arcGenerator = d3.svg.arc()
+			.innerRadius(0)
+			.outerRadius(200);
 
 		var pieLayout = d3.layout.pie()
 			.value(function(d){
@@ -52,7 +59,7 @@ window.onload = function(){
 			.attr("d", arcGenerator)
 			.style("fill", function(d){
 				return color(d.data.age);
-				// after arcGenerator, there is the original data and svg data
+				// after arcGenerator, there is the original data and the svg data
 			});
 
 		// labels
