@@ -51,25 +51,34 @@ window.onload = function(){
 					return yScale(d.name);
 				// use the category
 			})
-			.attr("x",function(d){
-				if(d.value > 0){
-					return xScale(0)
-				}else {
-					return xScale(d.value);
-				}
+			//.attr("x",function(d){
+			//	if(d.value > 0){
+			//		return xScale(0)
+			//	}else {
+			//		return xScale(d.value);
+			//	}
+			//})
+			.attr("x", function(d){
+				// major difference 1
+				return xScale(Math.min(0, d.value));
 			})
 			.attr("height", function(d){
 				return yScale.rangeBand();
 			})
 			.attr("width", function(d){
+				// major difference 2
+				// don't forget the Math.abs
 				return Math.abs(xScale(d.value)-xScale(0))
 			})
-			.style("fill",function(d){
-				if(d.value > 0){
-					return "blue"
-				}else {
-					return "red"
-				}
+			//.style("fill",function(d){
+			//	if(d.value > 0){
+			//		return "blue"
+			//	}else {
+			//		return "red"
+			//	}
+			//});
+			.style("fill", function(d){
+				return d.value>0 ? "steelblue" : "orange";
 			});
 
 		// axis
@@ -87,6 +96,8 @@ window.onload = function(){
 				"y1": 0,
 				"y2": height
 			})
+
+		// if ticks are needed, transform should be handy
 
 
 	})
