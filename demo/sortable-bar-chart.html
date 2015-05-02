@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>Lines Chart</title>
+	<style>
+		label{
+			position:absolute;
+			right:10px;
+			top:30px;
+		}
+
+		body{
+			font:10px arial;
+		}
+
+		.axis path,
+		.axis line{
+			fill:none;
+			stroke:#000;
+		}
+	</style>
+	<script src="../lib/d3.js"></script>
+</head>
+<body>
+<label>
+	<input type="checkbox" id="btn"/>Sort
+</label>
+<script>
+	window.onload = function(){
+		var margin = {
+			top:30,
+			right:30,
+			bottom:50,
+			left:50
+		};
+
+		var width = 960 - margin.left - margin.right;
+		var height = 600 - margin.top - margin.bottom;
+
+		var svg = d3.select("body")
+				.append("svg")
+				.attr({
+					"width": width+margin.left+margin.right,
+					"height": height+margin.top+margin.bottom
+				})
+				.append("g")
+				.attr("transform","translate("+margin.left+","+margin.top+")");
+
+		var xScale = d3.scale.ordinal()
+				.rangeRoundBands([0,width],.1);
+
+		var yScale = d3.scale.linear()
+				.range([height,0]);
+
+		var xAxis = d3.svg.axis()
+				.scale(xScale)
+				.orient("bottom");
+
+		var yAxis = d3.svg.axis()
+				.scale(yScale)
+				.orient("left")
+				.tickFormat(d3.format(".0%"));
+
+		d3.csv("../data/letters.csv", function(err,data){
+			data.forEach(function(d){
+				d.frequency = +d.frequency;
+			});
+
+			xScale.domain(data.map(function(d){
+				return d.letter;
+			}));
+
+			yScale.domain([
+					0,
+					d3.max(data, function(d){
+						return d.frequency
+					})
+			])
+
+			svg.selectAll(".rect")
+					.data(data).enter()
+					.append("rect")
+					.attr("class","bar")
+					.attr({
+						"x": function(d){
+							return xScale(d.letter);
+						},
+						"y": function(d){
+							return yScale(d.frequency);
+						},
+						"width": xScale.rangeBand(),
+						"height": function(d){
+							return height - yScale(d.frequency);
+						}
+					})
+					.style("fill","steelblue");
+
+
+
+			// axis
+			svg.append("g")
+					.attr("class","axis x")
+					.attr("transform","translate(0,"+height+")")
+					.call(xAxis);
+
+			svg.append("g")
+					.attr("class","axis y")
+					.call(yAxis);
+
+
+			// transition
+			d3.select("input").on("change", change);
+
+			var updateData;
+
+
+			function change(){
+				if(this.checked){
+					updateData = data.sort(function(a,b){
+						// return a.frequency - b.frequency;
+						return d3.ascending(a.frequency, b.frequency)
+					});
+				}else {
+					updateData = data.sort(function(a,b){
+						return d3.ascending(a.letter, b.letter);
+					})
+				}
+
+				// updated x scale
+				var xScaleCopy = xScale.domain(updateData.map(function(d){
+					return d.letter;
+				})).copy(); //copy the scale so you don't need to set another again
+
+				// http://bost.ocks.org/mike/transition/
+				svg.selectAll(".bar").transition().duration(750)
+						.delay(function(d,i){
+							return i*50;
+						})
+						.attr("x", function(d){
+							return xScaleCopy(d.letter)
+						});
+
+				// need to update axis as well
+				svg.select(".x.axis").transition().duration(750)
+						.delay(function(d,i){
+							return i*50;
+						})
+						.call(xAxis); // xAxis is based on xScale
+
+
+			}
+
+
+
+		})
+
+	};
+</script>
+</body>
+</html>
