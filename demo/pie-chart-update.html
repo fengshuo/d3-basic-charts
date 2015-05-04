@@ -71,8 +71,10 @@
 
 		d3.csv("../data/pie-update.csv",function(err,data){
 			data.forEach(function(d){
-				d["apples"] = +d["apples"],
-				d["oranges"]= +d["oranges"]
+				// The easiest way to transition between pie charts with differently-sized datasets (while maintaining object constancy)
+				// is to set the missing values to zero.
+				d["apples"] = +d["apples"] || 0,
+				d["oranges"]= +d["oranges"] || 0
 			});
 
 			// initialize radio check
