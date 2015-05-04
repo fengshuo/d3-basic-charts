@@ -19,13 +19,93 @@
 			fill:none;
 			stroke:#000;
 		}
+
+		#toggle{
+			position: absolute;
+			right:20px;
+			left:30px;
+			width:100px;
+			height:150px;
+		}
 	</style>
 	<script src="../lib/d3.js"></script>
 </head>
 <body>
+	<div id="toggle">
+		<p>
+			<input type="radio" value="apples">Apple
+		</p>
+		<p>
+			<input type="radio" value="oranges">Oranges
+		</p>
+	</div>
+	<div id="wrap"></div>
 <script>
 	window.onload = function(){
-		// http://bl.ocks.org/mbostock/1346395
+		var width = 960;
+		var height = 600;
+		var radius = Math.min(width, height)/2;
+
+		// the margin setting is a little bit different
+		var svg = d3.select("#wrap")
+							.append("svg")
+								.attr({
+									"width":width,
+									"height":height
+								})
+							.append("g")
+								.attr("transform","translate("+width/2+","+height/2+")");
+
+		// settings
+		var pieLayout = d3.layout.pie()
+										.value(function(d){
+											return d.apples;
+										})
+
+		var arcGenerator = d3.svg.arc()
+											.innerRadius(radius-70)
+											.outerRadius(radius-20);
+
+		var color = d3.scale.category10();
+
+
+		d3.csv("../data/pie-update.csv",function(err,data){
+			data.forEach(function(d){
+				d["apples"] = +d["apples"],
+				d["oranges"]= +d["oranges"]
+			});
+
+			// initialize
+			setTimeout(function(){
+				d3.select("input[value='apples']").property("checked",true);
+			},500)
+
+			// bind event
+			d3.selectAll("input").on("change",change);
+
+			var slice = svg.selectAll(".slice")
+									.data(pieLayout(data))
+									.enter()
+									.append("path")
+									.attr("d", arcGenerator)
+									.style("fill",function(d,i){
+										return color(i);
+									})
+
+			function change(){
+				var value = this.value;
+				pieLayout.value(function(d){
+					return d[value];
+				})
+				slice = slice
+								.data(pieLayout(data))
+								.attr("d", arcGenerator);
+			}
+
+
+
+		})
+
 	};
 </script>
 </body>
