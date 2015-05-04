@@ -33,10 +33,10 @@
 <body>
 	<div id="toggle">
 		<p>
-			<input type="radio" value="apples">Apple
+			<input type="radio" value="apples" name="ctrl">Apple
 		</p>
 		<p>
-			<input type="radio" value="oranges">Oranges
+			<input type="radio" value="oranges" name="ctrl">Oranges
 		</p>
 	</div>
 	<div id="wrap"></div>
@@ -75,7 +75,7 @@
 				d["oranges"]= +d["oranges"]
 			});
 
-			// initialize
+			// initialize radio check
 			setTimeout(function(){
 				d3.select("input[value='apples']").property("checked",true);
 			},500)
@@ -83,6 +83,7 @@
 			// bind event
 			d3.selectAll("input").on("change",change);
 
+			// initialize pie chart
 			var slice = svg.selectAll(".slice")
 									.data(pieLayout(data))
 									.enter()
@@ -91,15 +92,50 @@
 									.style("fill",function(d,i){
 										return color(i);
 									})
+									.each(function(d){
+										// 'this' is the selection/element
+										// here d includes data,value,angle
+										// this set of data will be used by arcGenerator to redraw slice
+										this._current = d;
+									})
 
 			function change(){
 				var value = this.value;
+				// update layout
 				pieLayout.value(function(d){
 					return d[value];
 				})
-				slice = slice
-								.data(pieLayout(data))
-								.attr("d", arcGenerator);
+
+				slice = slice.data(pieLayout(data));
+				// you can't chain transition directly after data
+				// a transition is a special type of 'selection'
+				slice.transition()
+								.duration(1000)
+								.attrTween("d", arcTween);
+								// apparently attrTween transitions the value of the
+								// attribute according to the specified tween function
+								// the starting and ending value of the transition
+								// are determined by tween
+								// tween function is invoked with
+								// 1. current datum - d
+								// 2. current index - i
+								// 3. current attribute - a
+								// 4. this - current DOM element
+								// The return value of tween must be an interpolator
+								// a function that maps a parametric value t in the domain [0,1] to a color, number or arbitrary value
+
+			};
+
+			function arcTween(d,i,a){
+				// since we are going to redraw these slices
+				// with arcGenerator, then we need the whole object
+				// which contains startAngle and endAngle etc
+				// hence the d3.interpolate will be automatically using d3.interpolateObject for objects
+				var i = d3.interpolate(this._current, d);
+				this._current = i(1); // update current attribute for next interpolate
+				return function(t){
+					return arcGenerator(i(t)); //redraw
+				}
 			}
 
 
