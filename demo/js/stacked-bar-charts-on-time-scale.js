@@ -136,12 +136,12 @@ window.onload = function(){
 			var group = svg.selectAll(".groups")
 								.data(data);
 
-			group.enter()
-					 .append("g")
-						.attr("class","groups")
-						.style("fill",function(d,i){
-							return color(i);
-						});
+			// group.enter()
+			// 		 .append("g")
+			// 			.attr("class","groups")
+			// 			.style("fill",function(d,i){
+			// 				return color(i);
+			// 			});
 
 			var rect = group.selectAll("rect")
 								.data(function(d){
@@ -150,7 +150,7 @@ window.onload = function(){
 
 			rect.enter()
 					.append("rect")
-					.attr("x",width);
+					//.attr("x",width);
 
 			rect.transition().duration(1000)
 			.attr({
@@ -166,15 +166,15 @@ window.onload = function(){
 				"width": xScale.rangeBand()
 			})
 
-			rect.exit()
-			.transition()
-			.duration(1000)
-			.remove();
+			// rect.exit()
+			// .transition()
+			// .duration(1000)
+			// .remove();
 
-			group.exit()
-					.transition()
-					.duration(1000)
-					.remove();
+			// group.exit()
+			// 		.transition()
+			// 		.duration(1000)
+			// 		.remove();
 
 
 			svg.select(".x.axis")
