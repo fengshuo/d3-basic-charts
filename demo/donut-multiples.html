@@ -3,11 +3,152 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Bivariate Chart</title>
-	<link rel="stylesheet" href="./css/donut-multiples.css">
+	<style>
+	body{
+		font:10px arial;
+	}
+
+	.axis path,
+	.axis line{
+		fill:none;
+		stroke:#000;
+	}
+
+
+	.line{
+		fill:none;
+		stroke: orange;
+		stroke-width: 1.5px;
+	}
+
+	</style>
 	<script src="../lib/d3.js"></script>
 
 </head>
 <body>
-<script src="./js/donut-multiples.js"></script>
+<script>
+window.onload = function(){
+
+	var radius = 70;
+
+	var svg = d3.select("body");
+
+	var legendArea = svg
+		.append("svg")
+		.attr({
+			"width": radius*2,
+			"height": radius*2
+		});
+
+	var color = d3.scale.category10();
+
+	d3.csv("../data/population.csv", function(err, data){
+		// update color domain
+		color.domain(d3.keys(data[0]).filter(function(key){
+			return key !== 'State';
+		}));
+
+
+		var donutLayout = d3.layout.pie()
+			.value(function(d){
+				return d.population;
+				// use population to draw, but d also has the name data
+				// for labels
+			});
+
+		var arcGenerator = d3.svg.arc()
+			.innerRadius(40)
+			.outerRadius(70);
+
+		// organize data, add a new key for age group values
+		// (instead of reconstruction the data per se)
+		data.forEach(function(d){
+			d.values = color.domain().map(function(c){
+				return {
+					name: c,
+					population: +d[c]
+				}
+			})
+		});
+
+		var group = svg.selectAll(".donut")
+				.data(data)
+			// but with label info
+			// although the label data is not necessary for the shape itself
+				.enter() // generate donut for each state
+			.append("svg")
+			// use svg to wrap instead of g, because g needs translate
+				.attr({
+					"width": radius*2,
+					"height": radius*2
+				})
+			// or else the center will be the top left corner
+			// let's take it as:
+			// the donut will draw based on the parent's (0,0)
+			// thus part of the donut is not visible initially
+			// however we can append g and use translate to solve this
+			// and also, the text is added in the (0,0) point
+			.append("g")
+				.attr("transform","translate("+radius+","+radius+")")
+
+
+		group.selectAll(".arc")
+			.data(function(d){
+				// use layout to handle data
+				console.log(donutLayout(d.values))
+				return donutLayout(d.values);
+				// return value is an array of arc descriptors
+			})
+			.enter()
+			.append("path")
+			// use generator to draw with the target data
+			// population is returned by donutLayout as value
+			// and with shape data and origin data
+			.attr("d",arcGenerator)
+			.attr("class","arc")
+			.style("fill",function(d){
+				return color(d.data.name);
+			});
+
+		group.append("text")
+			.attr("text-anchor","middle")
+			.text(function(d){
+				return d.State;
+			});
+
+
+
+
+		// update legend
+		var legendGroup = legendArea.selectAll(".legend")
+							.data(color.domain())
+							.enter()
+						.append("g")
+							.attr("class","legend")
+			.attr("transform", function(d,i){
+				return "translate(0," + i*15 + ")";
+			});
+
+		legendGroup.append("rect")
+			.attr({
+				"width":10,
+				"height":10
+			})
+			.style("fill",function(d){
+				return color(d);
+			});
+
+		legendGroup.append("text")
+			.attr({
+				"x":70,
+				"y":10
+			})
+			.style("text-anchor","middle")
+			.text(function(d){
+				return d;
+			})
+	})
+};
+</script>
 </body>
 </html>

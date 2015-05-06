@@ -17,6 +17,194 @@
 	<script src="../lib/d3.js"></script>
 </head>
 <body>
-<script src="./js/dispatch-event.js"></script>
+<script>
+// http://bl.ocks.org/mbostock/5872848
+window.onload = function(){
+	var dispatch = d3.dispatch("load", "statechange");
+
+	var groups = [
+  	"Under 5 Years",
+	  "5 to 13 Years",
+	  "14 to 17 Years",
+	  "18 to 24 Years",
+	  "25 to 44 Years",
+	  "45 to 64 Years",
+	  "65 Years and Over"
+	];
+
+	d3.csv("../data/population2.csv", function(data){
+		data.total = d3.sum(groups, function(g){
+			// get the sum value
+			return (+data[g]);
+		});
+		return data;
+	}, function(err,data){
+		//console.log(data);
+		if(err) throw err;
+
+		var stateById = d3.map(); // construct a new map
+		data.forEach(function(d){
+			stateById.set(d.id, d) // generate set
+		});
+
+		// after data is loaded, trigger load event
+		dispatch.load(stateById);
+		// and then initialize with state changed to CA
+		dispatch.statechange(stateById.get("CA"));
+		console.log(stateById.get("CA"))
+	});
+
+	// dropdown menu
+	// use namespace for different listeners
+	dispatch.on("load.menu", function(stateById){
+		var select = d3.select("body").append("div")
+			.append("select")
+			.on("change", function(){
+				// if select changes, trigger statechange, dispatch it like above
+				dispatch.statechange(stateById.get(this.value))
+				// for set, get by id, but return the whole object
+			});
+
+		// generate the options by state
+		select.selectAll("option")
+				.data(stateById.values())
+				.enter()
+			.append("option")
+				.attr("value", function(d){
+					return d.id;
+				})
+			.text(function(d){return d.id;});
+
+		// add listener for statechange
+		// line 42-44 is dispatching statechange
+		dispatch.on("statechange.menu", function(state){
+			select.property("value", state.id)
+		})
+
+	});
+
+	// bar chart
+	dispatch.on("load.bar", function(stateById){
+		// when load is listened, initialize the bar chart
+		var margin = {
+			top:10,
+			right:10,
+			bottom:30,
+			left:30
+		};
+
+		var width = 100 - margin.left - margin.right;
+		var height = 460 - margin.top - margin.bottom;
+
+		var svg = d3.select("body")
+			.append("svg")
+				.attr({
+					"width": width+margin.left+margin.right,
+					"height": height+margin.top+margin.bottom
+				})
+			.append("g")
+				.attr("transform", "translate("+margin.left+","+margin.top+")");
+
+		var yScale = d3.scale.linear()
+			.range([height, 0])
+			.domain([
+				0,
+				d3.max(stateById.values(), function(d){
+					return d.total;
+				})
+			]);
+
+		var yAxis = d3.svg.axis()
+			.scale(yScale)
+			.orient("left")
+			.tickFormat(d3.format(".2s"))
+
+		var bar = svg.append("rect")
+			.attr("x", 5)
+			.attr("width", width-10)
+			// this is just initialization
+			// it will change because statechange will be triggered immediately
+			.attr("height",0)
+			.attr("y", yScale(0))
+			.style("fill","steelblue");
+
+		svg.append("g")
+			.attr("class","y axis")
+			.call(yAxis);
+
+		dispatch.on("statechange.bar", function(d){ // data param is passed here
+			bar.transition().duration(750)
+				.attr("y", yScale(d.total))
+				.attr("height", height - yScale(d.total))
+		})
+
+	});
+
+	// pie chart
+	dispatch.on("load.pie", function(stateById){
+		// onload, initialize pie chart
+		var width = 600;
+		var height = 500;
+		var radius = Math.min(width,height)/2;
+
+		var color = d3.scale.category10()
+			.domain(groups);
+
+		var arcGenerator = d3.svg.arc()
+			.innerRadius(radius-10)
+			.outerRadius(radius-50);
+
+		var pieLayout = d3.layout.pie()
+			.sort(null); // if there is no sort here
+			// the transition would look different
+		    // Pass null to disable sorting.
+		    // If comparator is not specified, returns the current sort order.
+		    // The sort order defaults to descending value
+
+		var svg = d3.select("body").append("svg")
+			.attr({
+				"width":width,
+				"height":height
+			})
+			.append("g")
+			.attr("transform", "translate("+width/2+","+height/2+")");
+			// don't forget this transform for pie chart to show properly
+
+		var path = svg.selectAll("path")
+			.data(groups)
+			.enter().append("path")
+			.style("fill", function(d,i){return color(i)})
+			.each(function(){
+				// initialize as 0, so to see the initial transition of CA
+				this._current = {
+					startAngle:0,
+					endAngle:0
+				}
+			});
+
+		// now update with the CA data by statechange
+		dispatch.on("statechange.pie", function(d){
+			// see pie chart update for details
+			path.data(
+				pieLayout.value(function(g){
+					// use accessor function to generate layout data for each age group
+					return d[g];
+				})(groups)
+			).transition().duration(750)
+				.attrTween("d", attrTweenFunc);
+
+			function attrTweenFunc(d,i,a){
+				var interpolate = d3.interpolate(this._current, d);
+				this._current = interpolate(1); //NOTE:why not 1
+				return function(t){
+					return arcGenerator(interpolate(t));
+				}
+			}
+
+		})
+	})
+};
+
+</script>
 </body>
 </html>
