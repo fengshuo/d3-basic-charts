@@ -32,6 +32,7 @@ window.onload = function(){
 							.scale(yScale)
 							.orient("left")
 							.tickFormat(d3.format(".2s"));
+
 	d3.csv("../data/population3.csv",function(d){
 		d.people = +d.people;
 		return d;
@@ -42,22 +43,23 @@ window.onload = function(){
 			d3.max(data, function(d){
 				return d.people;
 			})
-		])
+		]); // use fixed y scale so that it's easier to observe population change per year
 
-		// reconstruct data
+		//console.log(data);
+		// manipulate data with d3.nest
 		var newData = d3.nest()
 								.key(function(d){
-									return d.year;
+									return d.year; // step 1 - group by year
 								})
 								.key(function(d){
-									return d.age;
+									return d.age; // in each year, group by age
 								})
-								.rollup(function(leaf){
+								.rollup(function(leaf){ // use rollup to manipulate values in leaf
 									return leaf.map(function(m){
-										return m.people;
+										return m.people; // only need people in this case, it is common to use d3.sum() here
 									})
 								})
-								.map(data);
+								.map(data); // if use entries here, it not convenient to use the data
 
 		console.log(newData);
 
@@ -71,20 +73,19 @@ window.onload = function(){
 
 
 		select.selectAll("option")
-				.data(d3.keys(newData))
+				.data(d3.keys(newData)) // return keys, that is, the 'year'
 				.enter()
 				.append("option")
 				.attr("value", function(d){
 					return d;
 				})
-
 				.text(function(d){
 					return d;
 				});
 
-		// Firstly, add g for each age group
+		// Firstly, create g for each age group (which contains male and female)
 		var ageGroup = svg.selectAll(".age")
-			.data(d3.keys(newData["2000"])) // initialize
+			.data(d3.keys(newData["2000"])) // read the age group by one of the year
 			.enter()
 			.append("g")
 			.attr("class","age")
@@ -93,15 +94,15 @@ window.onload = function(){
 			})
 
 
-		var year = d3.select("select").property("value")
+		var year = d3.select("select").property("value") // get value of the year
 
 		// Then, add female and male for each age group
 		var rect = ageGroup.selectAll("rect")
-			.data(function(age){
+			.data(function(age){ // the age is from ageGroup data()
 				return newData[year][age];
 			})
 			.enter()
-			.append("rect")
+			.append("rect") // two rect are appended to group here
 			.attr({
 				"width": xScale.rangeBand(),
 				"y": function(d){
@@ -113,7 +114,7 @@ window.onload = function(){
 			});
 
 		function updateYear(year){
-			console.log(year)
+			// update data, add transition
 			ageGroup.data(d3.keys(newData[year]))
 
 			rect.data(function(age){
