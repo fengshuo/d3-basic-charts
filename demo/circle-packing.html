@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>Bubble Chart</title>
+	<style>
+		circle {
+			fill: rgb(31, 119, 180);
+			fill-opacity: .25;
+			stroke: rgb(31, 119, 180);
+			stroke-width: 1px;
+		}
+
+		.leaf circle {
+			fill: #ff7f0e;
+			fill-opacity: 1;
+		}
+
+		text {
+			font: 10px sans-serif;
+		}
+	</style>
+	<script src="../lib/d3.js"></script>
+</head>
+<body>
+<script>
+	// http://bl.ocks.org/mbostock/4063530
+	window.onload = function(){
+		var diameter = 960;
+
+		var svg = d3.select("body").append("svg")
+				.attr({
+					width: diameter,
+					height: diameter
+				});
+
+		// initialize pack layout, (hierarchy)
+		var pack = d3.layout.pack()
+				.size([diameter, diameter]) // set layout size
+				.padding(1.5) // padding between adjacent circles, in pixel
+				.value(function(d){
+					console.log(d)
+					// data here only includes:
+					// name, size, depth
+					// we need to use this to generate x,y,r, etc
+					return d.size;
+				});
+
+		// The value accessor is invoked for each input data element,
+		// and must return a number representing the numeric value of the node.
+		// This value is used to set the area of each circle proportionally to the value
+
+		d3.json('../data/flare.json', function(err, root){
+			if(err) throw err;
+			// for hierarchy data, it starts with root
+			var node = svg.selectAll(".node")
+					.data(pack(root))
+					.enter()
+					.append("g")
+					.attr("class", function(d){
+						// distinguish node and leaf node
+						return d.children ? "node" : "leaf";
+					})
+					.attr("transform", function(d){
+						// translate as a group works as well
+						return "translate("+ d.x + "," + d.y + ")";
+					});
+
+			node.append("circle")
+					.attr("r", function(d){
+						return d.r;
+					});
+
+			node.filter(function(d){
+				return !d.children; // only show text on leaf node
+			})
+					.append("text")
+					.text(function(d){
+						// return d.name;
+						// NOTE: better way to show text?
+					})
+
+
+		})
+
+
+	};
+</script>
+</body>
+</html>
