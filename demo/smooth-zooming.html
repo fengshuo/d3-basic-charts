@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>Zooming</title>
+	<style>
+	.start {
+	fill: none;
+	stroke: brown;
+	}
+
+	.end {
+	fill: none;
+	stroke: steelblue;
+	}
+	</style>
+	<script src="../lib/d3.js"></script>
+</head>
+<body>
+<script>
+	// http://bl.ocks.org/mbostock/4063530
+	window.onload = function(){
+		var width = 960;
+		var height = 500;
+
+		// interpolateView requires position-x, position-y, width of the view
+		var pos0 = [250,200,60];
+		var pos1 = [560,300,120];
+
+		var svg = d3.select("body").append("svg")
+			.attr({
+				"width": width,
+				"height": height
+			})
+			.append("g")
+				.call(transition, pos0, pos1)
+			// Invokes the specified function once, passing in the current selection along with any optional arguments.
+			// equivalently transition(selection)
+
+			svg.selectAll("circle")
+				.data([pos0,pos1])
+				.enter().append("circle") // create circles
+				.attr({
+					"class": function(d,i){
+						return i ? "left" : "right";
+					},
+					"cx": function(d){
+						return d[0];
+					},
+					"cy": function(d){
+						return d[1];
+					},
+					"r": function(d){
+						return d[2]/2; // radius is nearly half the width
+					}
+				});
+
+
+			function transition(selection, start, end){
+				var center = [width/2, height/2];
+				var i = d3.interpolateZoom(start, end);
+
+				selection
+				.attr("transform", transform(start)) //initialize
+			.transition()
+				.delay(250)
+				.duration(i.duration)
+				// attrTween
+				.attrTween("transform", function(){
+					return function(t){
+						return transform(i(t));
+						// the i(t) here automatically use interpolateArray
+					}
+				})
+				// to control indefinit loop
+				// .each("end", function(){
+				//	d3.select(this).call(transition, end, start)
+				// })
+
+				function transform(p){
+					// the smooth algorithem
+					// https://www.cs.ubc.ca/~tmm/courses/cpsc533c-04-spr/readings/zoompan.pdf
+					var k = height / p[2]; // the highlevel size compared with radius
+					// the value of p[2] will change with interpolate so that the ratio k changes
+					// the essence of distance is center[0]-p[0] to move the view to center
+					return "translate(" + (center[0] - p[0] * k) + "," + (center[1] - p[1] * k) + ")scale(" + k + ")";
+				}
+
+			}
+
+	};
+
+</script>
+</body>
+</html>
