@@ -76,7 +76,7 @@
 					d3.max(data, function(d){
 						return d.frequency
 					})
-			])
+			]);
 
 			svg.selectAll(".rect")
 					.data(data).enter()
@@ -139,6 +139,8 @@
 						})
 						.attr("x", function(d){
 							return xScaleCopy(d.letter)
+							// return xScale(d.letter)
+							// it's the same
 						});
 
 				// need to update axis as well
