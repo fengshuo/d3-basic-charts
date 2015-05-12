@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>Bubble Chart</title>
+	<style>
+		body{
+			font:10px arial;
+		}
+		.link {
+			fill:none;
+			stroke: pink;
+			stroke-width: 1px;
+		}
+		.node  circle{
+			fill: none;
+			stroke-width: 1px;
+			stroke: steelblue;
+		}
+	</style>
+	<script src="../../lib/d3.js"></script>
+</head>
+<body>
+<script>
+	// http://bl.ocks.org/mbostock/4063550
+	window.onload = function(){
+		var diameter = 960;
+
+		var svg = d3.select("body").append("svg")
+				.attr({
+					"width": diameter,
+					"height": diameter
+				})
+				.append("g")
+				.attr("transform","translate("+ diameter/2 +","+ diameter/2 +")");
+
+		var tree = d3.layout.tree()
+				// radial layout
+				.size([360, diameter/2 - 80 ])
+				.separation(function(a,b){
+					return (a.parent == b.parent ? 1 : 2) / a.depth;
+				});
+			   /*
+				to produce a radial layout where the tree breadth (x)
+				is measured in degrees, and the tree depth (y) is a radius r in pixels
+				, say [360, r].
+			    */
+
+				/*
+				for radial layout, reducing the separation gap proportionally to the radius
+				 */
+
+
+		// don't forget update the radial here!
+		var diagonal = d3.svg.diagonal.radial()
+				.projection(function(d){
+					return [d.y, d.x / 180 * Math.PI];
+					// since y defines the radius in pixels
+					// x defines the angle in degrees
+				});
+
+		d3.json("../../data/flare.json", function(err, root){
+
+			var nodes = tree.nodes(root);
+
+			var links = tree.links(nodes);
+
+
+			var lines = svg.selectAll(".link")
+					.data(links).enter()
+					.append("path")
+					.attr("d", diagonal)
+					.attr("class", "link");
+
+			var dots = svg.selectAll(".node")
+					.data(nodes).enter()
+					.append("g")
+					.attr("class", "node")
+					.attr("transform", function(d){
+						// 1.have to transform according to data
+						// 2.since we rotate 90 degree before
+						// we need to rotate back 90 degrees
+						return "rotate(" + (d.x - 90) +")translate(" + d.y + ")";
+					})
+
+
+			dots.append("circle")
+					.attr("r", 5);
+
+			dots.append("text")
+					.attr("transform", function(d){
+						return d.x < 180 ? "translate(8)" : "rotate(180)translate(-8)" //translate first then rotate
+					})
+					.attr("text-anchor", function(d){
+						return d.x < 180 ? "start" : "end";
+					})
+					.text(function(d){
+						return d.name;
+					})
+
+
+
+
+
+
+
+		})
+
+	};
+</script>
+</body>
+</html>
