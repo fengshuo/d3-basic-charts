@@ -1,1 +1,96 @@
-http://bl.ocks.org/mbostock/4063570
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Cluster Dendrogram</title>
+		<style>
+		body{
+			font:10px arial;
+		}
+
+		.node circle {
+		  fill: #fff;
+		  stroke: steelblue;
+		  stroke-width: 1.5px;
+		}
+
+		.node {
+		  font: 10px sans-serif;
+		}
+
+		.link {
+		  fill: none;
+		  stroke: #ccc;
+		  stroke-width: 1.5px;
+		}
+
+		</style>
+	<script src="../lib/d3.js"></script>
+</head>
+<body>
+<script>
+window.onload = function(){
+	var width = 960, height = 2000;
+
+	// cluster layout
+	var cluster = d3.layout.cluster()
+								.size([height, width]);
+								// TODO: why rotate the layout like this?
+
+	// diagonal drawing
+	var diagonal = d3.svg.diagonal()
+				// convert a point to an array
+					.projection(function(d){
+						return [d.y, d.x];
+						// TODO: why rotate the layout like this?
+					});
+
+	var svg = d3.select("body").append("svg")
+						.attr({
+							"width": width,
+							"height": height
+						})
+
+	d3.json("../data/flare.json", function(err,data){
+		// process data for this layout
+		var nodes = cluster.nodes(data);
+		// generate link data
+		var links = cluster.links(nodes);
+
+		// draw the link line
+		var link = svg.selectAll(".link")
+						.data(links)
+						.enter()
+					.append("path")
+						.attr("d", diagonal)
+						.attr("class","link");
+
+		// draw nodes
+		var node = svg.selectAll(".node")
+						.data(nodes)
+						.enter().append("g")
+						.attr("class","node")
+						.attr("transform", function(d){
+							return "translate("+d.y+","+d.x+")";
+						})
+
+		node.append("circle")
+				.attr("r",5);
+
+		node.append("text")
+				.text(function(d){
+					return d.name;
+				})
+
+
+
+
+	})
+
+
+
+
+};
+</script>
+</body>
+</html>
