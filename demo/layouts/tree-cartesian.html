@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>Bubble Chart</title>
+	<style>
+		body{
+			font:10px arial;
+		}
+		.link {
+			fill:none;
+			stroke: pink;
+			stroke-width: 1px;
+		}
+		.node  circle{
+			fill: none;
+			stroke-width: 1px;
+			stroke: steelblue;
+		}
+	</style>
+	<script src="../../lib/d3.js"></script>
+</head>
+<body>
+<script>
+	// http://bl.ocks.org/mbostock/4339184
+	window.onload = function(){
+		var width = 800;
+		var height = 2800;
+		var margin = {
+			left: 10,
+			top: 10
+		}
+
+		var svg = d3.select("body").append("svg")
+				.attr({
+					"width": width,
+					"height": height
+				})
+				.append("g")
+				.attr("transform","translate("+margin.left+","+margin.top+")");
+
+		// set up tree layout
+		var tree = d3.layout.tree()
+				.size([height, width-160])
+			// default size is 1*1
+			// transpose x,y to rotate 90 degrees
+				.separation(function sep(a,b){
+					return a.parent == b.parent ? 1 : 5;
+				});
+			// separation to compute separation between neighboring nodes
+			// default is a.parent == b.parent ? 1 : 2;
+
+
+		// the drawing pen
+		var diagonal = d3.svg.diagonal()
+				.projection(function(d){
+					return [d.y, d.x];
+					// project function is used to convert a point
+					// to an array
+					// notice the x,y position is transposed to adjust
+					// to the tree layout size setting
+				});
+
+		d3.json("../../data/flare.json", function(err, root){
+			// process data
+			// 1. process the root node, return an array of computed positions of all nodes
+			var nodes = tree.nodes(root);
+			// 2. get the link relationship from parent to child based on array of nodes
+			// often used with diagonal shape generator
+			var links = tree.links(nodes);
+			// append this first
+			// otherwise it could block text label?
+			var lines = svg.selectAll(".link")
+					.data(links).enter()
+					.append("path")
+					.attr("d", diagonal)
+					.attr("class", "link");
+
+			var dots = svg.selectAll(".node")
+					.data(nodes).enter()
+					.append("g")
+					.attr("transform", function(d){
+						return "translate("+ d.y + "," + d.x + ")";
+					})
+					.attr("class", "node");
+
+
+
+
+			dots.append("circle")
+					.attr("r", 5);
+
+			dots.append("text")
+					.text(function(d){
+						return d.name;
+					})
+					.attr("text-anchor", function(d){
+						return d.children ? "end" : "start";
+					})
+					.attr("dx", function(d){
+						return d.children ? -8 : 8;
+					})
+					.attr("dy",5)
+
+
+
+
+
+		})
+
+	};
+</script>
+</body>
+</html>
