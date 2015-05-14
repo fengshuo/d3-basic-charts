@@ -8,6 +8,18 @@
 			font:10px arial;
 		}
 
+		.path {
+			fill: none;
+			stroke: steelblue;
+			stroke-width: 1px;
+		}
+
+		.node {
+			fill: none;
+			stroke: pink;
+			stroke-width: 2px;
+		}
+
 	</style>
 	<script src="../../lib/d3.js"></script>
 </head>
@@ -15,6 +27,61 @@
 <script>
 // http://mbostock.github.io/d3/talk/20111018/tree.html
 window.onload = function(){
+	var margin = {
+		top:50,
+		right:20,
+		bottom: 20,
+		left: 100
+	}
+	var width = 1300 - margin.left - margin.right;
+	var height = 900 - margin.top - margin.bottom;
+
+	var tree = d3.layout.tree()
+						.size([height, width]);
+						// rotate 90 degrees
+
+	var diagonal = d3.svg.diagonal()
+								.projection(function(d){
+									return [d.y, d.x];
+								});
+
+	// append svg
+	var svg = d3.select("body")
+							.append("svg")
+							.attr({
+								"width": width+margin.left+margin.right,
+								"height": height+margin.top+margin.bottom
+							})
+						.append("g")
+							.attr("transform", "translate("+margin.left+","+margin.top + ")");
+
+	// load data
+	d3.json("../../data/flare.json", function(err, data){
+		var nodes = tree.nodes(data);
+		var link = tree.links(nodes);
+
+		// add lines
+		svg.selectAll(".path")
+				.data(link)
+				.enter()
+				.append("path")
+				.attr("d", diagonal)
+				.attr("class", "path");
+
+		// add nodes
+		svg.selectAll(".node")
+				.data(nodes)
+				.enter()
+				.append("circle")
+				.attr("class","node")
+				.attr("transform", function(d){
+					return "translate(" + d.y + "," + d.x + ")";
+				})
+				.attr("r", 5)
+
+
+	})
+
 
 };
 </script>
