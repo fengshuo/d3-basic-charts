@@ -60,6 +60,8 @@ window.onload = function(){
 		var nodes = tree.nodes(data);
 		var link = tree.links(nodes);
 
+		console.log(nodes);
+
 		// add lines
 		svg.selectAll(".path")
 				.data(link)
