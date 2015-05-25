@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Area Chart</title>
+  <style>
+	body{
+		font:10px arial;
+	}
+
+	.bg {
+		fill: #ddd;
+	}
+
+
+	</style>
+  <script src="../lib/d3.js"></script>
+
+</head>
+<body>
+  <script>
+	window.onload = function(){
+		// http://bl.ocks.org/mbostock/4349486
+		// http://bl.ocks.org/mbostock/1166403
+		// http://www.d3noob.org/2013/01/adding-grid-lines-to-d3js-graph.html
+
+		var margin = {top: 200, right: 10, bottom: 200, left: 10},
+				width = 960 - margin.right - margin.left,
+				height = 500 - margin.top - margin.bottom;
+
+		var xScale = d3.scale.linear()
+				.domain([0,1])
+				.range([0,width]);
+
+		var yScale = d3.scale.linear()
+				.range([0,height]);
+
+		var svg = d3.select("body").append("svg")
+				.attr("width", width + margin.right + margin.left)
+				.attr("height", height + margin.top + margin.bottom)
+				.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+		// add the light grey background
+		svg.append("rect")
+				.attr({
+					"width": width,
+					"height": height
+				})
+				.attr("class","bg");
+
+		// add two axis, one in the rect area, the other outside the rect area
+		var xAxisIn = d3.svg.axis()
+				.scale(xScale)
+				.ticks(20)
+				.tickSize(-height) // so the ticker is in
+
+		svg.append("g")
+				.attr("class", "x axis")
+				.attr("transform", "translate(0,"+height+")")
+				.call(xAxisIn)
+				.selectAll('.tick')
+				.classed('in-axis', true)
+
+
+
+
+	};
+	</script>
+</body>
+</html>
