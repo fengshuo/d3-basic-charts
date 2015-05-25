@@ -12,6 +12,26 @@
 		fill: #ddd;
 	}
 
+  .axis path,
+  .axis line{
+    fill:none;
+    stroke:#000;
+  }
+
+  .axis.out path{
+    display: none;
+  }
+
+  .axis.in text, .axis.in path{
+    display: none;
+  }
+
+  .axis.in line{
+    stroke: white;
+  }
+
+
+
 
 	</style>
   <script src="../lib/d3.js"></script>
@@ -55,13 +75,21 @@
 				.ticks(20)
 				.tickSize(-height) // so the ticker is in
 
-		svg.append("g")
-				.attr("class", "x axis")
-				.attr("transform", "translate(0,"+height+")")
-				.call(xAxisIn)
-				.selectAll('.tick')
-				.classed('in-axis', true)
+    var xAxisOut = d3.svg.axis()
+                      .scale(xScale)
+                      .ticks(10);
 
+    // call xAxisOut
+    svg.append("g")
+          .attr("class","x axis out")
+          .attr("transform", "translate(0,"+height+")")
+          .call(xAxisOut)
+
+    // call xAxisIn
+    svg.append("g")
+          .attr("class", "x axis in")
+          .attr("transform", "translate(0,"+height+")")
+          .call(xAxisIn)
 
 
 
