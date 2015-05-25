@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>time</title>
+  <style>
+	body{
+		font:10px arial;
+	}
+
+	.axis path,
+  .axis line {
+    fill: none;
+    stroke: black;
+  }
+	</style>
+  <script src="../lib/d3.js"></script>
+
+</head>
+<body>
+  <script>
+	window.onload = function(){
+		// http://bl.ocks.org/mbostock/4149176
+
+  // use the predict function in each array, the first which returns true,
+  // that's the date specifier it will use
+	var customTimeFormat = d3.time.format.multi([
+	  [".%L", function(d) { return d.getMilliseconds(); }],
+	  [":%S", function(d) { return d.getSeconds(); }],
+	  ["%I:%M", function(d) { return d.getMinutes(); }],
+	  ["%I %p", function(d) { return d.getHours(); }],
+	  ["%a %d", function(d) { return d.getDay(); }],
+	  ["%b %d", function(d) { return d.getDate(); }]
+	]);
+
+
+		var margin = {top: 250, right: 40, bottom: 250, left: 40},
+		    width = 960 - margin.left - margin.right,
+		    height = 500 - margin.top - margin.bottom;
+
+    var start = new Date(2015, 3, 1);
+    var end = new Date(2015, 4, 1);
+
+		var x = d3.time.scale()
+		    .domain([start, end]) // use time scale, the domain needs to be Date Object
+		    .range([0, width]);
+
+		var xAxis = d3.svg.axis()
+		    .scale(x)
+				.orient("bottom")
+        .tickFormat(customTimeFormat)
+        // if you want to use more customized ticker, use tickValues
+
+        //.tickValues(d3.time.days(start,end,5).filter(function(d,i){
+        //  return d.getDate() !== 1
+        //}))
+
+        // d3.time.days is alias for d3.time.day.range,
+        // returns the day boundaries, if step is specified, then the stepth date will be returned.
+
+        // .tickValues(d3.time.days(start,end,7))
+
+
+
+		var svg = d3.select("body").append("svg")
+		    .attr("width", width + margin.left + margin.right)
+		    .attr("height", height + margin.top + margin.bottom)
+		  .append("g")
+		    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+		svg.append("g")
+		    .attr("class", "x axis")
+		    .attr("transform", "translate(0," + height + ")")
+		    .call(xAxis)
+
+
+	};
+	</script>
+</body>
+</html>
