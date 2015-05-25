@@ -30,6 +30,9 @@
     stroke: white;
   }
 
+    .tick.minor line{
+      stroke: pink;
+    }
 
 
 
@@ -90,8 +93,20 @@
           .attr("class", "x axis in")
           .attr("transform", "translate(0,"+height+")")
           .call(xAxisIn)
+          // specify class by exit selection
+        .selectAll(".tick")
+              .data(xScale.ticks(10), function(d){
+                // A key function may be specified to control how data is joined to elements.
+                // This replaces the default by-index behavior
+                // that means now it is joined by 'd'
+                return d;
+                // The key function returns a string which is used to join a datum with its corresponding element
+                // based on the previously-bound data.
+              })
+            .exit()
+                  .classed("minor",true)
 
-
+          
 
 	};
 	</script>
