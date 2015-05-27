@@ -4,17 +4,67 @@
     <meta charset="UTF-8">
     <title>make a map</title>
 	<style>
-
+	.subunit.SCT { fill: #ddc; }
+	.subunit.WLS { fill: #cdd; }
+	.subunit.NIR { fill: #cdc; }
+	.subunit.ENG { fill: #dcd; }
+	.subunit.IRL { display: none; }
+	.subunit-label {
+  fill: #777;
+  fill-opacity: .5;
+  font-size: 20px;
+  font-weight: 300;
+  text-anchor: middle;
+}
 	</style>
 	<script src="../lib/d3.js"></script>
 	<script src="../lib/topojson.v1.min.js"></script>
 </head>
 <body>
-
-
 <script>
 	window.onload = function(){
+		var width = 960,
+    height = 1160;
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
 		// http://bost.ocks.org/mike/map/
+		d3.json('../data/uk.json', function(err, uk){
+			// use topojson to convert shp or GeoJSON to TOPOJSON as the uk.json
+			console.log(uk);
+
+			// projection is used to project spherical coordinate to the Cartesian plane
+			var projection = d3.geo.albers()
+    									.center([0, 55.4])
+    									.rotate([4.4, 0])
+    									.parallels([50, 60])
+    									.scale(6000)
+    									.translate([width / 2, height / 2]);
+			// use d3.geo.path to draw map with path
+			var path = d3.geo.path()
+									.projection(projection);
+
+			var subunits = topojson.feature(uk, uk.objects.subunits);
+
+			svg.selectAll(".subunit")
+			     // use topojson.min.js to convert TOPOJSON back to GeoJSON
+    			.data(topojson.feature(uk, uk.objects.subunits).features)
+  			  .enter().append("path")
+    			.attr("class", function(d) { return "subunit " + d.id; })
+    			.attr("d", path)
+
+			svg.selectAll(".subunit-label")
+		    .data(topojson.feature(uk, uk.objects.subunits).features)
+		  .enter().append("text")
+		    .attr("class", function(d) { return "subunit-label " + d.id; })
+		    .attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
+		    .attr("dy", ".35em")
+		    .text(function(d) { return d.properties.name; });
+
+
+
+		})
 	}
 </script>
 </body>
