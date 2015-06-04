@@ -20,22 +20,25 @@
 	  stroke: #ccc;
 	}
 
-	.color-10{fill:rgb(215,48,39)}
-	.color-9{fill:rgb(244,109,67)}
-	.color-8{fill:rgb(253,174,97)}
-	.color-7{fill:rgb(254,224,139)}
-	.color-6{fill:rgb(255,255,191)}
-	.color-5{fill:rgb(217,239,139)}
-	.color-4{fill:rgb(166,217,106)}
-	.color-3{fill:rgb(102,189,99)}
-	.color-2{fill:rgb(26,152,80)}
-	.color-1{fill:rgb(0,104,55)}
+	#metric {
+		position: absolute;
+		top: 30px;
+	}
+
+	.wrapper{
+		position: absolute;
+		top:200px;
+	}
+
 	</style>
 	<script src="../lib/d3.js"></script>
 </head>
 <body>
 	<!--<p>data source: https://developer.forecast.io/</p>-->
-
+	<select name="metric" id="metric">
+		<option value="temperature" selected="selected">temperature</option>
+		<option value="humidity">humidity</option>
+	</select>
 <script>
 
 window.onload = function(){
@@ -58,18 +61,29 @@ window.onload = function(){
 								"height": height
 							})
 							.append("g")
+							.attr("class","wrapper")
 							.attr("transform","translate("+margin.left+","+margin.top+")");
 	 /*formatter*/
 	var format = d3.time.format("%Y-%m-%d");
 
 
 	/*Scale and Axis*/
-	// color scale
+	// color
+
+	var colorTemperature = ['rgb(215,48,39)','rgb(244,109,67)', 'rgb(253,174,97)', 'rgb(254,224,139)', 'rgb(255,255,191)', 'rgb(217,239,139)', 'rgb(166,217,106)','rgb(102,189,99)','rgb(26,152,80)','rgb(0,104,55)'];
+	var colorHumidity = ['rgb(252,251,253)','rgb(239,237,245)','rgb(218,218,235)','rgb(188,189,220)','rgb(158,154,200)','rgb(128,125,186)','rgb(106,81,163)','rgb(84,39,143)','rgb(63,0,125)','rgb(74,0,74)'];
+
+	/*
 	var colorTemperature = d3.scale.quantize()
 						.range(d3.range(1,11).map(function(d){
 							return "color-" + d;
 						}));
 
+	var colorHumidity = d3.scale.quantize()
+						.range(d3.range(1,11).map(function(d){
+							return "color-h-" + d;
+						}));
+  */
 	// load data
 	d3.json('../data/weather.json', function(json){
 		// update scale domains
@@ -91,8 +105,8 @@ window.onload = function(){
 		var end = new Date(format.parse(json[json.length-1].date));
 		xScale.domain([start, end]);
 
-
-		colorTemperature.domain([
+		var colorScheme = d3.scale.quantize();
+		colorScheme.domain([
 			d3.min(json, function(j){
 				return d3.min(j.data, function(d){
 					return d.temperature;
@@ -103,11 +117,11 @@ window.onload = function(){
 					return d.temperature;
 				})
 			})
-		])
+		]);
 
+		colorScheme.range(colorTemperature)
 		// columns
-
-			var columns = svg.selectAll(".column")
+		var columns = svg.selectAll(".column")
 							.data(json)
 							.enter()
 						.append("g")
@@ -134,8 +148,9 @@ window.onload = function(){
 							return i * cellSize
 						}
 					})
-					.attr("class", function(d){
-							return "hour " + colorTemperature(d.temperature);
+					.attr("class","hour")
+					.attr("fill", function(d){
+							return colorScheme(d.temperature);
 					})
 
 			// axis
@@ -153,6 +168,40 @@ window.onload = function(){
 						.attr("class","y axis")
 						.call(yAxis)
 
+			d3.select("#metric").on("change", change);
+
+			function change(e){
+
+				var metric = this.value;
+				var colorRange = metric == 'temperature' ? colorTemperature : colorHumidity;
+
+				colorScheme.domain([
+					d3.min(json, function(j){
+						return d3.min(j.data, function(d){
+							return d[metric];
+						})
+					}),
+					d3.max(json, function(j){
+						return d3.max(j.data, function(d){
+							return d[metric];
+						})
+					})
+				]);
+
+				colorScheme.range(colorRange)
+
+				columns.selectAll(".hour")
+							.attr("class", "hour")
+							.transition()
+							.duration(1000)
+							.delay(function(d,i){
+								return i*10
+							})
+							.attrTween("fill", function(d,i,a){
+								return d3.interpolate(a,colorScheme(d[metric]));
+							});
+
+			}
 
 
 	})
