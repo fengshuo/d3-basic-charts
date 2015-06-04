@@ -20,6 +20,12 @@
 	.wrapper .q8-11{fill:rgb(102,189,99)}
 	.wrapper .q9-11{fill:rgb(26,152,80)}
 	.wrapper .q10-11{fill:rgb(0,104,55)}
+
+	.month {
+	  fill: none;
+	  stroke: #000;
+	  stroke-width: 1px;
+	}
 	</style>
 	<script src="../lib/d3.js"></script>
 </head>
@@ -45,6 +51,9 @@
 				var week = d3.time.format("%U"); //week number of the year (Sunday as the first day of the week) as a decimal number [00,53]
 				// format the date object to below string so that it can be compared with object keys
 				var format = d3.time.format("%Y-%m-%d");
+				// format the percentage of each day (in title)
+				var percent = d3.format(".1%") //A format function takes a number as the only argument, and returns a string representing the formatted number
+
 
 				// Render each year
 				// adjust paddings as well
@@ -59,7 +68,17 @@
 										.attr("class","wrapper")
 										// adjust paddings
 									.append("g")
-										.attr("transform", "translate("+ (width-cellSize*53)/2 + "," + (height-cellSize*7)/2 + ")")
+										.attr("transform", "translate("+ (width-cellSize*53)/2 + "," + (height-cellSize*7)/2 + ")");
+
+				// append year text
+				svg.append("text")
+						.attr("transform", "translate(-6,"+cellSize*3.5 + ")rotate(-90)")
+						.style("text-anchor", "middle")
+						.text(function(d){
+							return d;
+						})
+
+
 
 				// render the day block
 				var rect = svg.selectAll(".day")
@@ -79,11 +98,55 @@
 											return day(d) * cellSize;
 										}
 									})
+									// after using them as Date object
+									// need to format them into strings
 									.datum(function(d){
 										return format(d);
 									})
 
+				// add title to indicate data while hovering
+				rect.append("title")
+							.text(function(d){
+								return d;
+							});
 
+				// Draw month wrap path
+				svg.selectAll(".month")
+				.data(function(d){
+					// month boundaries
+					return d3.time.months(new Date(d,0,1) , new Date(d+1,0, 1));
+				})
+				.enter().append("path")
+				.attr("class","month")
+				.attr("d", monthPath) // draw path
+
+				function monthPath(t0){
+					//t0: Mon Mar 01 2010 00:00:00 GMT+0800 (CST)
+					var t1 = new Date(t0.getFullYear(), t0.getMonth()+1 , 0);
+					// the last day of this month(month+1,day->0)
+					var d0 = +day(t0), w0 = +week(t0),
+					    d1 = +day(t1), w1 = +week(t1);
+
+					// NOTE:
+					// path drawing commands:
+					// M->Move To; L->Line To;
+					// H-> Horizontal Line To; V->Vertical Line to;
+					// Z-> close path
+					// the important thing is the coordiante in drawing commands
+					// is absolute coordiante, not relative
+					// and the start of week and day is 0;
+					return "M" + (w0+1)*cellSize + "," + d0*cellSize
+					+ "H" + w0*cellSize
+					+ "V" + 7*cellSize
+					+ "H" + w1*cellSize
+					+ "V" + (d1+1)*cellSize
+					+ "H" + (w1+1)*cellSize
+					+ "V" + "0"
+					+ "H" + (w0+1)*cellSize
+					+ "Z";
+
+
+				}
 
 
 				// load csv file
@@ -105,7 +168,12 @@
 							})
 							.attr("class", function(d){
 								return "day " + color(data[d]);
-							});
+							})
+							// update title info
+							.select("title")
+									.text(function(d){
+										return d + ": " + percent(data[d]);
+									})
 
 				})
 
