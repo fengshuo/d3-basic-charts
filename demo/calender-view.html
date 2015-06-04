@@ -1,1 +1,116 @@
-<!-- http://bl.ocks.org/mbostock/4063318 -->
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>Calender View</title>
+	<style>
+	.day {
+	  fill: #fff;
+	  stroke: #ccc;
+	}
+
+	.wrapper .q0-11{fill:rgb(165,0,38)}
+	.wrapper .q1-11{fill:rgb(215,48,39)}
+	.wrapper .q2-11{fill:rgb(244,109,67)}
+	.wrapper .q3-11{fill:rgb(253,174,97)}
+	.wrapper .q4-11{fill:rgb(254,224,139)}
+	.wrapper .q5-11{fill:rgb(255,255,191)}
+	.wrapper .q6-11{fill:rgb(217,239,139)}
+	.wrapper .q7-11{fill:rgb(166,217,106)}
+	.wrapper .q8-11{fill:rgb(102,189,99)}
+	.wrapper .q9-11{fill:rgb(26,152,80)}
+	.wrapper .q10-11{fill:rgb(0,104,55)}
+	</style>
+	<script src="../lib/d3.js"></script>
+</head>
+<body>
+<script>
+
+	window.onload = function(){
+				// settings
+				var width = 960, height = 136;
+				var cellSize = 17;
+
+				// color scale
+				// similar to round, certain range in domain correspondent to a range
+				var color = d3.scale.quantize()
+										.domain([-0.05, 0.05])
+										.range(d3.range(11).map(function(d){
+											return "q" + d + "-11";
+										}));
+
+				// time formatter to return number of the week in a year
+				// or number of day in a week, etc
+				var day = d3.time.format("%w"); //weekday as a decimal number [0(Sunday),6]
+				var week = d3.time.format("%U"); //week number of the year (Sunday as the first day of the week) as a decimal number [00,53]
+				// format the date object to below string so that it can be compared with object keys
+				var format = d3.time.format("%Y-%m-%d");
+
+				// Render each year
+				// adjust paddings as well
+				var svg = d3.select("body")
+										.selectAll("svg")
+										.data(d3.range(1990,2011))
+									.enter().append("svg")
+										.attr({
+											"width": width,
+											"height": height
+										})
+										.attr("class","wrapper")
+										// adjust paddings
+									.append("g")
+										.attr("transform", "translate("+ (width-cellSize*53)/2 + "," + (height-cellSize*7)/2 + ")")
+
+				// render the day block
+				var rect = svg.selectAll(".day")
+									.data(function(d){
+										//Alias for d3.time.day.range. Returns the day boundaries (midnight) after or equal to start and before stop
+										return d3.time.days(new Date(d,0,1) , new Date(d+1,0,1))
+									})
+								.enter().append("rect")
+									.attr("class","day")
+									.attr({
+										"width": cellSize,
+										"height": cellSize,
+										"x": function(d){
+											return week(d) * cellSize;
+										},
+										"y": function(d){
+											return day(d) * cellSize;
+										}
+									})
+									.datum(function(d){
+										return format(d);
+									})
+
+
+
+
+				// load csv file
+				d3.csv('../data/dji.csv', function(err,csv){
+
+							var data = d3.nest()
+										.key(function(d){
+											return d.Date;
+										})
+										.rollup(function(d){
+											return (d[0].Close - d[0].Open) / d[0].Open;
+										})
+										.map(csv);
+										// notice the difference between map and entries
+							//console.log(data)
+							// add class to rect with respondent data
+							rect.filter(function(d){
+								return d in data;
+							})
+							.attr("class", function(d){
+								return "day " + color(data[d]);
+							});
+
+				})
+
+	};
+
+</script>
+</body>
+</html>
