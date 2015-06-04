@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>Weather HeatMap</title>
+	<style>
+
+	body{
+		font:10px arial;
+	}
+
+	.axis path,
+	.axis line{
+		fill:none;
+		stroke:#000;
+	}
+
+	.column {
+	  fill: #fff;
+	  stroke: #ccc;
+	}
+
+	.color-10{fill:rgb(215,48,39)}
+	.color-9{fill:rgb(244,109,67)}
+	.color-8{fill:rgb(253,174,97)}
+	.color-7{fill:rgb(254,224,139)}
+	.color-6{fill:rgb(255,255,191)}
+	.color-5{fill:rgb(217,239,139)}
+	.color-4{fill:rgb(166,217,106)}
+	.color-3{fill:rgb(102,189,99)}
+	.color-2{fill:rgb(26,152,80)}
+	.color-1{fill:rgb(0,104,55)}
+	</style>
+	<script src="../lib/d3.js"></script>
+</head>
+<body>
+	<!--<p>data source: https://developer.forecast.io/</p>-->
+
+<script>
+
+window.onload = function(){
+	// inspired by http://bl.ocks.org/oyyd/859fafc8122977a3afd6
+	var margin = {
+		top:80,
+		right:10,
+		bottom:50,
+		left:100
+	};
+
+	var width = 600 - margin.left - margin.right;
+	var height = 960 - margin.top - margin.bottom;
+
+	var cellSize = 20;
+
+	var svg = d3.select("body").append("svg")
+							.attr({
+								"width": width,
+								"height": height
+							})
+							.append("g")
+							.attr("transform","translate("+margin.left+","+margin.top+")");
+	 /*formatter*/
+	var format = d3.time.format("%Y-%m-%d");
+
+
+	/*Scale and Axis*/
+	// color scale
+	var colorTemperature = d3.scale.quantize()
+						.range(d3.range(1,11).map(function(d){
+							return "color-" + d;
+						}));
+
+	// load data
+	d3.json('../data/weather.json', function(json){
+		// update scale domains
+		var xScale = d3.time.scale()
+								.range([0,cellSize*json.length]);
+		var yScale = d3.scale.ordinal()
+									.domain(d3.range(0,25))
+									.rangeRoundBands([0,cellSize*24]);
+
+		var xAxis = d3.svg.axis()
+								.scale(xScale)
+								.orient("top")
+								.tickFormat(d3.time.format("%m-%d"))
+
+		var yAxis = d3.svg.axis()
+								.scale(yScale)
+								.orient("left");
+		var start = new Date(format.parse(json[0].date));
+		var end = new Date(format.parse(json[json.length-1].date));
+		xScale.domain([start, end]);
+
+
+		colorTemperature.domain([
+			d3.min(json, function(j){
+				return d3.min(j.data, function(d){
+					return d.temperature;
+				})
+			}),
+			d3.max(json, function(j){
+				return d3.max(j.data, function(d){
+					return d.temperature;
+				})
+			})
+		])
+
+		// columns
+
+			var columns = svg.selectAll(".column")
+							.data(json)
+							.enter()
+						.append("g")
+								.attr({
+									"width": cellSize,
+									"height": height
+								})
+								.attr("transform", function(d,i){
+											return "translate(" + i*cellSize + ",0)"
+								})
+								.attr("class","column");
+
+		columns.selectAll(".hour")
+					.data(function(d){
+						return d.data;
+					})
+					.enter()
+					.append("rect")
+					.attr({
+						"width": cellSize,
+						"height": cellSize,
+						"x": 0,
+						"y": function(d,i){
+							return i * cellSize
+						}
+					})
+					.attr("class", function(d){
+							return "hour " + colorTemperature(d.temperature);
+					})
+
+			// axis
+			svg.append("g")
+						.attr("class","x axis")
+						.call(xAxis)
+						.selectAll("text")
+									.attr("transform","rotate(-90)")
+									.attr("text-anchor","start")
+									.attr("dx","1.8em")
+									.attr("dy", "0.8em")
+
+
+			svg.append("g")
+						.attr("class","y axis")
+						.call(yAxis)
+
+
+
+	})
+
+
+};
+
+</script>
+</body>
+</html>
