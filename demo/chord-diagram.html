@@ -4,7 +4,15 @@
   <meta charset="UTF-8">
   <title>Chord Diagram</title>
   <style>
+  body {
+    font: 10px sans-serif;
+  }
 
+  .ribbon path {
+    fill-opacity: .67;
+    stroke: #000;
+    stroke-width: .5px;
+  }
 	</style>
   <script src="../lib/d3.js"></script>
 
@@ -16,7 +24,7 @@
 	window.onload = function(){
     // basic settings
     var width = 960, height = 500;
-    var innerRadius = Math.min(width, height)*0.4;
+    var innerRadius = Math.min(width, height)* 0.4;
     var outerRadius = innerRadius*1.1;
 
     var svg = d3.select("body").append("svg")
@@ -44,6 +52,10 @@
     // chord layout
     // includes: arcs on the outside, chord/ribbons inside
     var chord = d3.layout.chord()
+                .padding(0.05) //padding between groups in radian
+                //.sortGroups(d3.descending)
+                .sortSubgroups(d3.descending) // V.S. sortGroups
+                //.sortChords(d3.descending) //TODO:?
                 .matrix(matrix);
 
 
@@ -52,6 +64,7 @@
           .data(chord.groups) // the outside arcs
         .enter().append("path")
           .style("fill", function(d){
+
             //d: {index, startAngle, endAngle, value}
             // value is the sum of one row
             return fill(d.index);
@@ -61,9 +74,74 @@
           })
           // the arcs
           .attr("d", d3.svg.arc().innerRadius(innerRadius).outerRadius(outerRadius))
+          .on("mouseover", fadeFunc(0.1))
+          .on("mouseout", fadeFunc(1));
 
+    // generate ticks for each group
+    var ticks = svg.append("g").selectAll("g")
+        .data(chord.groups)
+        .enter()
+        .append("g") // appended group for each group
+        .selectAll("g")
+        .data(groupTicks)
+        .enter()
+        .append("g") // append virtual ticks group for each group
+        .attr("transform", function(d){
+          console.log(d.angle * 180 / Math.PI)
+          return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")"
+                 + "translate(" + outerRadius + ",0)";
+
+          /*
+          convert radian to degrees: radian(d.angle) = 180 degrees / Math.PI
+          because SVG rotate only takes degrees.
+
+          rotate(a,x,y)
+          If optional x and y are not supplied,
+          the rotate is about the origin of the current user coordinate system
+
+          since the transform rotate starts with the horizontal line(0 degree)
+          we need to minus 90 degrees so that it will start with the vertical line
+          which is in line with the concept of radian
+          */
+        })
+
+    // actually add things in virtual ticks group
+
+    ticks.append("line")
+    .attr("x1", 1)
+    .attr("y1", 0)
+    .attr("x2", 5)
+    .attr("y2", 0)
+    .style("stroke", "#000");
+
+    ticks.append("text")
+      .attr("x", 8)
+      .attr("dy", ".35em")
+      .attr("transform", function(d) { return d.angle > Math.PI ? "rotate(180)translate(-16)" : null; })
+      .style("text-anchor", function(d) { return d.angle > Math.PI ? "end" : null; })
+      .text(function(d) { return d.label; });
+
+    // data for ticks
+    function groupTicks(d){
+      // d is from chord.groups
+      // includes startAngle, endAngle, value, index
+
+      // value -> angle
+      var unit = (d.endAngle-d.startAngle)/d.value;
+
+      // map returns a new array
+      return d3.range(0, d.value, 1000).map(function(v,i){
+
+        return {
+          angle: d.startAngle + v*unit, // angels for each tick
+          label: i%5 ? null : v/1000+"k" // labels for every 5 ticks
+        }
+      })
+
+    }
 
     // render ribbons
+
     svg.append("g")
         .attr("class","ribbon")
         .selectAll("path")
@@ -71,10 +149,24 @@
       .enter().append("path")
             .attr("d", d3.svg.chord().radius(innerRadius))
             .style("fill", function(d){
-              console.log(d)
+
               return fill(d.target.index)
             })
 
+
+    function fadeFunc(opacity){
+
+      // return event handler to listener
+      // here, (g) for their element data, the index (i) is a property of the selection
+      return function(g,i){
+        svg.selectAll(".ribbon path")
+            .filter(function(d){
+              return d.source.index != i && d.target.index != i;
+            })
+          .transition()
+            .style("opacity",opacity)
+      }
+    }
 
 	}
   </script>
