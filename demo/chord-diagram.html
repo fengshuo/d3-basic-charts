@@ -12,7 +12,69 @@
 <body>
 
   <script>
+  // helpful article: http://www.delimited.io/blog/2013/12/8/chord-diagrams-in-d3
 	window.onload = function(){
+    // basic settings
+    var width = 960, height = 500;
+    var innerRadius = Math.min(width, height)*0.4;
+    var outerRadius = innerRadius*1.1;
+
+    var svg = d3.select("body").append("svg")
+          .attr({
+            "width": width,
+            "height": height
+          })
+          // drawing includes arcs
+        .append("g")
+          .attr("transform","translate("+width/2+","+height/2+")")
+
+    // scale for groups
+    var fill = d3.scale.ordinal()
+                .domain(d3.range(4))
+                .range(["#000000", "#FFDD89", "#957244", "#F26223"]);
+
+    // has to be a square matrix
+    var matrix = [
+      [11975,  5871, 8916, 2868],
+      [ 1951, 10048, 2060, 6171],
+      [ 8010, 16145, 8090, 8045],
+      [ 1013,   990,  940, 6907]
+    ];
+
+    // chord layout
+    // includes: arcs on the outside, chord/ribbons inside
+    var chord = d3.layout.chord()
+                .matrix(matrix);
+
+
+    // render groups
+    svg.append("g").selectAll("path")
+          .data(chord.groups) // the outside arcs
+        .enter().append("path")
+          .style("fill", function(d){
+            //d: {index, startAngle, endAngle, value}
+            // value is the sum of one row
+            return fill(d.index);
+          })
+          .style("stroke", function(d){
+            return fill(d.index);
+          })
+          // the arcs
+          .attr("d", d3.svg.arc().innerRadius(innerRadius).outerRadius(outerRadius))
+
+
+    // render ribbons
+    svg.append("g")
+        .attr("class","ribbon")
+        .selectAll("path")
+        .data(chord.chords)
+      .enter().append("path")
+            .attr("d", d3.svg.chord().radius(innerRadius))
+            .style("fill", function(d){
+              console.log(d)
+              return fill(d.target.index)
+            })
+
 
 	}
   </script>
