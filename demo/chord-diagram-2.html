@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chord Diagram</title>
+  <style>
+  body {
+    font: 10px sans-serif;
+  }
+
+	</style>
+  <script src="../lib/d3.js"></script>
+
+</head>
+<body>
+
+  <script>
+    // http://bl.ocks.org/mbostock/1046712
+	window.onload = function(){
+		var width = 800, height = 800;
+		var innerR = Math.min(width, height)/2 - 50;
+		var outerR = innerR * 1.1;
+
+		var svg = d3.select("body")
+				.append("svg")
+					.attr({
+						"width": width,
+						"height": height
+					})
+				.append("g")
+				.attr("transform", "translate("+ width/2 + "," + height/2 + ")");
+
+
+		// colors
+		var colorScale = d3.scale.category20c();
+
+		// layout
+		var layout = d3.layout.chord()
+				.sortGroups(d3.descending)
+				.sortSubgroups(d3.descending)
+				.padding(0.02);
+
+		// arc generator
+		var arcGenerator = d3.svg.arc()
+				.innerRadius(innerR)
+				.outerRadius(outerR);
+
+		// chord generator
+		var chordGenerator = d3.svg.chord()
+						.radius(innerR);
+
+		d3.json("../data/readme.json", function(err,json){
+
+			// TODO:create matrix is the most important and challenging step
+			var indexByName = d3.map(); //Constructs a new map
+			var nameByindex = d3.map();
+			var matrix = [];
+			var n = 0;
+
+			// returns package name
+			function nameHandler(name){
+				return name.substring(0, name.lastIndexOf(".")).substring(6);
+			}
+
+			json.forEach(function(d){
+				// create unique index for each package by check if it has the key first
+				if(!indexByName.has(d=nameHandler(d.name))){
+					nameByindex.set(n,d); // map.set(key, value)
+					indexByName.set(d, n++); // Sets the value for the specified key string; returns the new value
+				}
+			})
+			console.log(json)
+
+			json.forEach(function(d){
+				var source = indexByName.get(nameHandler(d.name))
+				console.log(source)
+				var row = matrix[source];
+
+				if(!row){
+					row = matrix[source] = [];
+					for(var i=-1;++i<n;){
+						row[i] = 0;
+					}
+				}
+
+				d.imports.forEach(function(d){
+					row[indexByName.get(nameHandler(d))]++;
+				});
+
+			})
+
+			console.log(matrix)
+
+			// use matrix to render
+			layout.matrix(matrix);
+
+			// render group
+			var group = svg.selectAll(".group")
+					.data(layout.groups)
+					.enter().append("g")
+					.attr("class","group");
+
+			group.append("path")
+					.style({
+						"fill": function(d){
+							return colorScale(d.index);
+						},
+						"stroke": function(d){
+							return colorScale(d.index);
+						}
+					})
+					.attr("d", arcGenerator);
+
+			// group.append("text")
+
+			// render ribbon
+			svg.selectAll(".ribbon")
+					.data(layout.chords)
+					.enter().append("path")
+					.style({
+						"fill": function(d){
+							return colorScale(d.source.index);
+						},
+						"stroke": function(d){
+							return colorScale(d.source.index);
+						}
+					})
+					.attr("d", chordGenerator)
+
+
+
+		})
+
+
+
+
+
+	};
+  </script>
+</body>
+</html>
