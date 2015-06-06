@@ -8,6 +8,20 @@
     font: 10px sans-serif;
   }
 
+  .group text {
+	  font: 11px sans-serif;
+	  pointer-events: none;
+  }
+
+  .group path {
+	  stroke: #000;
+  }
+
+  path.ribbon {
+	  stroke-width: .75;
+	  fill-opacity: .75;
+  }
+
 	</style>
   <script src="../lib/d3.js"></script>
 
@@ -17,6 +31,168 @@
 <script>
 	// http://bl.ocks.org/mbostock/1308257
 	window.onload = function(){
+		/*settings*/
+		var width = 490, height = 500;
+		var innerRadius = Math.min(width,height)/2 - 30;
+		var outerRadius = innerRadius*1.1;
+
+		// data for 2 svgs, will be loaded later
+		var debits = [];
+		var credits = [];
+
+		// svg wrapper for two chord charts
+		var svg = d3.select("body")
+					.selectAll("div")
+					.data([debits, credits])
+				.enter().append("div")
+					.style({
+						"display": "inline-block",
+						"width": width + "px",
+						"height": height + "px"
+					})
+				.append("svg")
+					.attr({
+						"width": width,
+						"height": height
+					})
+				.append("g") // move the coordinate origin to the center of the div
+				.attr("transform","translate("+width/2+","+height/2+")");
+
+		// chord layout
+		var layout = d3.layout.chord()
+				.sortGroups(d3.descending)
+				.sortSubgroups(d3.descending)
+				.padding(.04);
+
+		// arc generator for groups outside
+		var arcGenerator = d3.svg.arc()
+				.innerRadius(innerRadius)
+				.outerRadius(outerRadius);
+
+		// chord generator for ribbons inside
+		var chordGenerator = d3.svg.chord()
+				.radius(innerRadius); //others will be handled by layout
+
+		// color scale based on `risk`
+		var colorScale = d3.scale.ordinal()
+				.domain(d3.range(0,4))
+				.range(["#DB704D", "#D2D0C6", "#ECD08D", "#F8EDD3"]);
+
+		d3.csv("../data/debt.csv", function(err,csv){
+
+			/**
+			 * Creating matrix from loaded csv file
+			 */
+			var countries = {};
+			var array = [];
+			var n = 0;
+
+			csv.forEach(function(d){
+				d.creditor = country(d.creditor);
+				d.debtor = country(d.debtor);
+				d.debtor.risk = d.risk;
+				d.valueOf = value;
+			})
+
+			function country(d){
+				// generate unique id for each country
+				return countries[d] || (countries[d]={
+							name:d,
+							id: n++
+						})
+			}
+
+			function value(){
+				return +this.amount;
+			}
+
+			// initialize a square matrix (for debits and credits)
+			for(var i=0; i<n; i++){
+				debits[i] = [];
+				credits[i] = [];
+				for(var j=0;j<n;j++){
+					debits[i][j] = 0;
+					credits[i][j] = 0;
+				}
+			}
+
+			// update matrix with data
+			csv.forEach(function(d){
+				console.log(d)
+				debits[d.creditor.id][d.debtor.id] = d;
+				credits[d.debtor.id][d.creditor.id] = d;
+				array[d.debtor.id] = d.debtor;
+			})
+
+			//console.log(array)
+
+			// selection.each
+			// Invokes the specified function for each element in the current selection, passing in the current datum d and index i, with the this context of the current DOM element.
+			// matrix is debits/credits
+			svg.each(function(matrix, chartIndex){
+				// current svg
+				var svg = d3.select(this);
+
+				// layout handle matrix
+				layout.matrix(matrix);
+
+				// render chord(ribbons)
+				var ribbons = svg.selectAll(".ribbon")
+						.data(layout.chords)
+						.enter().append("path")
+						.attr("class","ribbon")
+						.style({
+							"fill": function(d){
+								//console.log(d)
+								return colorScale(d.source.value.risk)
+							},
+							"stroke": function(d){
+								return colorScale(d.source.value.risk)
+							}
+						})
+						.attr("d", chordGenerator)
+						.text(function(d){
+							return d.source.value.debtor.name+" owes " + d.source.value.creditor.name + d.source.value;
+						});
+
+				// render groups
+				var groups = svg.selectAll(".group")
+							.data(layout.groups)
+						.enter().append("g")
+							.attr("class","group");
+
+				// render arcs
+				groups.append("path")
+						.attr("d",arcGenerator)
+						.attr("id", function(d){
+							return "group"+ d.index + "-" + chartIndex;
+						})
+						.style("fill", function(d){
+							return colorScale(array[d.index].risk)
+						})
+
+
+				// render text
+				groups.append("text")
+						.filter(function(d){
+							return d.value > 100; // so that there is enought room for text
+						})
+						.attr("dy",10)
+						.attr("text-anchor","start")
+					// textPath needs the path data, which can be reused by referencing id of other path
+						.append("textPath")
+						.attr("xlink:href", function(d){
+							return "#group"+ d.index+"-"+chartIndex
+						})
+						.text(function(d){
+							return array[d.index].name;
+						})
+
+
+
+			})
+
+		});
 
 	}
 </script>
