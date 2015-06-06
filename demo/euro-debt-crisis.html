@@ -5,7 +5,7 @@
   <title>Euro Debt Crisis</title>
   <style>
   body {
-    font: 10px sans-serif;
+    font: 9px sans-serif;
   }
 
   .group text {
@@ -32,8 +32,8 @@
 	// http://bl.ocks.org/mbostock/1308257
 	window.onload = function(){
 		/*settings*/
-		var width = 490, height = 500;
-		var innerRadius = Math.min(width,height)/2 - 30;
+		var width = 500, height = 500;
+		var innerRadius = Math.min(width,height)/2 - 50;
 		var outerRadius = innerRadius*1.1;
 
 		// data for 2 svgs, will be loaded later
@@ -47,8 +47,8 @@
 				.enter().append("div")
 					.style({
 						"display": "inline-block",
-						"width": width + "px",
-						"height": height + "px"
+						"width": (width+50) + "px",
+						"height": (height+50) + "px"
 					})
 				.append("svg")
 					.attr({
@@ -118,13 +118,11 @@
 
 			// update matrix with data
 			csv.forEach(function(d){
-				console.log(d)
 				debits[d.creditor.id][d.debtor.id] = d;
 				credits[d.debtor.id][d.creditor.id] = d;
-				array[d.debtor.id] = d.debtor;
+				array[d.debtor.id] = d.debtor; // use country to find risk, to render group
 			})
 
-			//console.log(array)
 
 			// selection.each
 			// Invokes the specified function for each element in the current selection, passing in the current datum d and index i, with the this context of the current DOM element.
@@ -170,13 +168,27 @@
 						.style("fill", function(d){
 							return colorScale(array[d.index].risk)
 						})
+						// hover effect
+						.on("mouseover", fadeFunc(0.1))
+						.on("mouseout", fadeFunc(1));
 
+				function fadeFunc(opacity){
+					return function(g,i){
+						svg.selectAll(".ribbon")
+								.filter(function(d){
+									return d.source.index != i && d.target.index != i;
+								})
+								.transition()
+								.style("opacity", opacity)
+					}
+				}
 
 				// render text
 				groups.append("text")
 						.filter(function(d){
-							return d.value > 100; // so that there is enought room for text
+							return d.value > 100; // so that there is enough room for text
 						})
+						.attr("x",10)
 						.attr("dy",10)
 						.attr("text-anchor","start")
 					// textPath needs the path data, which can be reused by referencing id of other path
@@ -188,7 +200,54 @@
 							return array[d.index].name;
 						})
 
+				/**
+				 * Append Ticks
+				 */
 
+				var ticks = groups.selectAll("g")
+						.data(groupTicks)
+						.enter()
+						.append("g")
+						.attr("transform", function(d){
+							// rotate from vertical line and push it to radius
+							return "rotate(" + (d.angle * (180/Math.PI) - 90) + ")"
+									+ "translate(" + outerRadius + ",0)";
+						});
+
+				// generate grouptick data
+				function groupTicks(d){
+					var unit = (d.endAngle - d.startAngle) / d.value;
+					return d3.range(0, d.value, 50).map(function(v,i){
+						return {
+							angle: d.startAngle + unit * v,
+							label: i%5 ? null : (v>5?"$"+v+"B":null)
+						}
+					})
+				}
+
+				ticks.append("line")
+						.attr({
+							"x1":0,
+							"x2":8,
+							"y1":0,
+							"y2":0
+						})
+						.style("stroke","#000");
+
+				ticks.append("text")
+						.attr({
+							"x": 10,
+							"dy":"0.35em"
+						})
+						.attr("transform", function(d){
+							return d.angle > Math.PI ? "rotate(180)translate(-16)" : null;
+						})
+						.style("text-anchor", function(d){
+							return d.angle > Math.PI ? "end" : null;
+						})
+						.text(function(d){
+							return d.label;
+						})
 
 			})
 
