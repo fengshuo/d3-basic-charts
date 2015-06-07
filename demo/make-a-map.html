@@ -4,18 +4,41 @@
     <meta charset="UTF-8">
     <title>make a map</title>
 	<style>
-	.subunit.SCT { fill: #ddc; }
-	.subunit.WLS { fill: #cdd; }
-	.subunit.NIR { fill: #cdc; }
-	.subunit.ENG { fill: #dcd; }
-	.subunit.IRL { display: none; }
-	.subunit-label {
-  fill: #777;
-  fill-opacity: .5;
-  font-size: 20px;
-  font-weight: 300;
-  text-anchor: middle;
-}
+		.subunit.SCT { fill: #ddc; }
+		.subunit.WLS { fill: #cdd; }
+		.subunit.NIR { fill: #cdc; }
+		.subunit.ENG { fill: #dcd; }
+		.subunit.IRL { display: none; }
+
+		.boundary {
+			fill: none;
+			stroke: red;
+			stroke-dasharray: 2,2;
+			stroke-linejoin: round;
+		}
+
+		.boundary.IRL {
+			stroke: #aaa;
+		}
+
+		.place,
+		.label {
+			fill: #444;
+		}
+
+		text {
+			font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+			font-size: 10px;
+			pointer-events: none;
+		}
+
+		.country-label {
+			fill: #777;
+			fill-opacity: .5;
+			font-size: 20px;
+			font-weight: 300;
+			text-anchor: middle;
+		}
 	</style>
 	<script src="../lib/d3.js"></script>
 	<script src="../lib/topojson.v1.min.js"></script>
@@ -23,49 +46,102 @@
 <body>
 <script>
 	window.onload = function(){
-		var width = 960,
-    height = 1160;
+		var width = 960, height = 1200;
 
-var svg = d3.select("body").append("svg")
-    .attr("width", width)
-    .attr("height", height);
-		// http://bost.ocks.org/mike/map/
-		d3.json('../data/uk.json', function(err, uk){
-			// use topojson to convert shp or GeoJSON to TOPOJSON as the uk.json
-			console.log(uk);
+		var svg = d3.select("body").append("svg")
+				.attr({
+					"width": width,
+					"height": height
+				});
 
-			// projection is used to project spherical coordinate to the Cartesian plane
-			var projection = d3.geo.albers()
-    									.center([0, 55.4])
-    									.rotate([4.4, 0])
-    									.parallels([50, 60])
-    									.scale(6000)
-    									.translate([width / 2, height / 2]);
-			// use d3.geo.path to draw map with path
-			var path = d3.geo.path()
-									.projection(projection);
+		// convert from 3D to 2D
+		var projection = d3.geo.albers()
+				.center([0,55.4])
+				.rotate([4.4,0])
+				.parallels([50,60])
+				.scale(6000)
+				.translate([width/2, height/2])
+				 //The translation offset determines the pixel coordinates of the projection’s center.
+				// The default translation offset places ⟨0°,0°⟩ at the center of a 960×500 area, defaults to [480, 250]
 
-			var subunits = topojson.feature(uk, uk.objects.subunits);
+		// generate path based on 2d projection
+		var path = d3.geo.path().projection(projection);
 
+		d3.json("../data/uk.json", function(err,data){
+			console.log(data)
+
+			// While our data can be stored more efficiently in TopoJSON, we must convert back to GeoJSON for display
+			var geoData = topojson.feature(data, data.objects.subunits);
+
+			var boundaryData = topojson.mesh(data, data.objects.subunits, function(a,b){
+				return a!==b && a.id !== 'IRL';
+			});
+
+			var boundaryDataIRL = topojson.mesh(data, data.objects.subunits, function(a,b){
+				return a==b && a.id == 'IRL';
+			});
+
+			// topojson.mesh to compute boundaries
+			// in the optional filter function, a and b represent two features on either side of the boundary
+			// For exterior boundaries such as coastlines, a and b are the same
+			// Thus by filtering on a === b or a !== b, we obtain exterior or interior boundaries exclusively
+
+			// draw map
 			svg.selectAll(".subunit")
-			     // use topojson.min.js to convert TOPOJSON back to GeoJSON
-    			.data(topojson.feature(uk, uk.objects.subunits).features)
-  			  .enter().append("path")
-    			.attr("class", function(d) { return "subunit " + d.id; })
-    			.attr("d", path)
+					.data(geoData.features)
+					.enter().append("path")
+					.attr("class", function(d){
+						return "subunit " + d.id;
+					})
+					.attr("d",path);
 
-			svg.selectAll(".subunit-label")
-		    .data(topojson.feature(uk, uk.objects.subunits).features)
-		  .enter().append("text")
-		    .attr("class", function(d) { return "subunit-label " + d.id; })
-		    .attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
-		    .attr("dy", ".35em")
-		    .text(function(d) { return d.properties.name; });
+			// render boundaries
+			svg.append("path")
+					.datum(boundaryData)
+					.attr("d",path)
+					.attr("class","boundary");
+
+			// boundary of IRL
+			svg.append("path")
+					.datum(boundaryDataIRL)
+					.attr("d",path)
+					.attr("class","boundary IRL")
 
 
+			// use the places info to draw cities
+			svg.append("path")
+					.datum(topojson.feature(data, data.objects.places)) // places constitue a feature collection
+					.attr("d",path)
+					.attr("class","place")
+
+			svg.selectAll(".label")
+					.data(topojson.feature(data, data.objects.places).features)
+					.enter().append("text")
+					.attr("class","label")
+					.attr("transform", function(d){
+						// point on 2D map
+						return "translate(" + projection(d.geometry.coordinates) + ")";
+					})
+					.text(function(d){
+						return d.properties.name;
+					})
+
+			// labels for each country
+			svg.selectAll(".country-label")
+					.data(topojson.feature(data, data.objects.subunits).features)
+					.enter().append("text")
+					.attr("class", function(d){
+						return "country-label " + d.id;
+					})
+					.attr("transform", function(d){
+						return "translate(" + path.centroid(d) + ")"
+					})
+					.text(function(d){
+						return d.properties.name;
+					})
 
 		})
-	}
+	};
 </script>
 </body>
 </html>
