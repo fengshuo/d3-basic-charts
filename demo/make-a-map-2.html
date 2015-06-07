@@ -4,15 +4,99 @@
     <meta charset="UTF-8">
     <title>make a map 2</title>
 	<style>
+		path {
+			fill: none;
+			stroke: #000;
+			stroke-linejoin: round;
+			stroke-linecap: round;
+		}
 
+		.nation {
+			fill: #ddd;
+		}
+
+		.border-state {
+			fill: none;
+			stroke: #fff;
+			stroke-linejoin: round;
+			stroke-linecap: round;
+		}
+
+		.bubble {
+			fill-opacity: .5;
+			stroke: #fff;
+			stroke-width: .5px;
+		}
 	</style>
 	<script src="../lib/d3.js"></script>
 	<script src="../lib/topojson.v1.min.js"></script>
 </head>
 <body>
 <script>
+	// http://bost.ocks.org/mike/bubble-map/
+	// http://bl.ocks.org/mbostock/9943478
 	window.onload = function(){
-		
+
+		var width=960, height=600;
+		var path = d3.geo.path().projection(null) //already set in topojson command line
+
+		var svg = d3.select("body").append("svg")
+				.attr({
+					"width": width,
+					"height": height
+				})
+		/*
+		d3.json("../data/us.json", function(err,us){
+			console.log(us)
+			svg.append("path")
+					.datum(topojson.mesh(us))
+					.attr("d", path)
+		})
+		*/
+
+		d3.json("../data/us2.json", function(err,us){
+			console.log(us)
+			svg.append("path")
+					.datum(topojson.feature(us, us.objects.us2))
+					.attr("class","nation")
+					.attr("d",path);
+
+			svg.append("path")
+					// border lines between states
+					.datum(topojson.mesh(us, us.objects.us2, function(a,b){
+						return a!== b;
+					}))
+					.attr("class","border-state")
+					.attr("d",path);
+
+			// append circles stands for population
+			// sort bubbles so that smaller bubbles are draw on top of larger bubbles
+			// adjust the radius accordingly
+
+			var radiusScale = d3.scale.sqrt()
+					.domain([0, 1e6])
+					.range([0,15]);
+
+			svg.append("g")
+					.attr("class","bubble")
+					.selectAll("circle")
+					.data(topojson.feature(us, us.objects.counties).features
+							.sort(function(a,b){
+								return b.properties.population - a.properties.population;
+							})
+					)
+					.enter().append("circle")
+					.attr("transform", function(d){
+						return "translate(" + path.centroid(d) + ")";
+					})
+					.attr("r", function(d){
+						return radiusScale(d.properties.population)
+					})
+
+
+
+
+		})
 	}
 </script>
 </body>
