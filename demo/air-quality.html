@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>Calender View</title>
+	<style>
+
+	</style>
+	<script src="../lib/d3.js"></script>
+</head>
+<body>
+<script>
+
+	window.onload = function(){
+		// initiate settings
+		var margin = {
+			top:30,
+			right:30,
+			bottom:50,
+			left:50
+		};
+
+		var width = 960 - margin.left - margin.right;
+		var height = 600 - margin.top - margin.bottom;
+		var cellSize = 17;
+
+
+		var svg = d3.select("body").append("svg")
+				.attr({
+					"width": width,
+					"height": height
+				})
+				.append("g")
+				.attr("transform", "translate("+ margin.left + "," + margin.top + ")");
+
+		/* time formatter */
+		var day = d3.time.format("%w");
+		var week = d3.time.format("%U");
+		var format = d3.time.format("%Y-%m-%d");
+
+
+		/**
+		 *  color scale, uneven distribution
+		 *  according to official document about AQI, the domain range is 0-500
+		 */
+		var color =
+
+
+
+		d3.csv("../data/airquality.csv", function(err,csv){
+
+			var data = d3.nest()
+					.key(function(d){
+						return d.DATE;
+					})
+					.entries(csv);
+
+			data.forEach(function(d){
+				var sum = 0;
+				d.values.forEach(function(v){
+					sum += Number(v.AQI);
+				});
+				d.average = Math.round(sum / d.values.length);
+				d.key = format.parse(d.key)
+			});
+
+
+			/**
+			 * calender view
+			 */
+			var rect = svg.selectAll(".day")
+					.data(data)
+					.enter()
+					.append("rect")
+					.attr("class","day")
+					.attr({
+						"width": cellSize,
+						"height": cellSize,
+						"x": function(d){
+							return (week(d.key) - week(new Date(2014,3,14))) * cellSize;
+						},
+						"y": function(d){
+							return day(d.key) * cellSize;
+						}
+					})
+
+
+
+
+
+		})
+	};
+
+</script>
+</body>
+</html>
