@@ -4,7 +4,21 @@
 	<meta charset="UTF-8">
 	<title>Calender View</title>
 	<style>
+	body{
+		padding-bottom: 100px;
+	}
 
+	.line{
+		fill:none;
+		stroke: orange;
+		stroke-width: 1.5px;
+	}
+
+	.axis path,
+	.axis line{
+		fill:none;
+		stroke:#000;
+	}
 	</style>
 	<script src="../lib/d3.js"></script>
 </head>
@@ -14,14 +28,14 @@
 	window.onload = function(){
 		// initiate settings
 		var margin = {
-			top:30,
+			top:20,
 			right:20,
-			bottom:50,
+			bottom:20,
 			left:30
 		};
 
 		var width = 1150 - margin.left - margin.right;
-		var height = 600 - margin.top - margin.bottom;
+		var height = 300 - margin.top - margin.bottom;
 		var cellSize = 17;
 
 
@@ -38,6 +52,7 @@
 		var week = d3.time.format("%U");
 		var format = d3.time.format("%Y-%m-%d");
 		var year = d3.time.format("%Y"); //to differentiate 2014,2015, avoid overlap
+		var hourParser = d3.time.format("%H:%M:%S").parse;
 
 		/**
 		 *  color scale, uneven distribution
@@ -59,11 +74,18 @@
 					.entries(csv);
 
 			data.forEach(function(d){
+
 				var sum = 0;
 				d.values.forEach(function(v){
 					sum += Number(v.AQI);
 				});
 				d.average = Math.round(sum / d.values.length);
+				d.max = d3.max(d.values, function(v){
+					return +v.AQI;
+				})
+				d.min = d3.min(d.values, function(v){
+					return +v.AQI;
+				})
 				d.key = format.parse(d.key)
 			});
 
@@ -105,6 +127,80 @@
 			/**
 			 * show hourly data in line chart
 			 */
+			var minorMargin = {
+				top:10,
+				right:10,
+				bottom:50,
+				left:50
+			}
+			var minorWidth = 960 - minorMargin.left - minorMargin.right;
+			var minorHight = 500 - minorMargin.top - minorMargin.bottom;
+
+			var lineChart = d3.select("body").append("svg")
+											.attr({
+												"width": minorWidth,
+												"height": minorHight
+											})
+											.append("g")
+											.attr("transform","translate("+minorMargin.left+",0)")
+											.attr("class","lineChart")
+
+			// initialize lineChart
+			var xScale = d3.time.scale()
+								.domain([hourParser("00:00:00"),hourParser("23:00:00")])
+								.range([0,minorWidth]);
+
+			var yScale = d3.scale.linear()
+									.range([minorHight-30, 0]);
+
+			var xAxis = d3.svg.axis()
+									.scale(xScale)
+									.orient("bottom")
+
+			var yAxis = d3.svg.axis()
+									.scale(yScale)
+									.orient("left")
+			// line generator
+			var lineGenerator = d3.svg.line()
+			.interpolate("basis")
+						.x(function(d){
+							return xScale(hourParser(d.TIME))
+						})
+						.y(function(d){
+							return yScale(Number(d.AQI))
+						});
+
+			// draw first time point
+			yScale.domain([+data[0]["min"], +data[0]["max"]])
+
+			var line = lineChart.selectAll(".line") //?
+								.data([data[0]])
+								.enter()
+								.append("path")
+								.attr("d", function(d){
+									return lineGenerator(d.values);
+								})
+								.attr("class","line");
+
+			var xLineAxis = lineChart.append("g")
+				.attr("transform","translate(0," + (minorHight-30) + ")")
+				.attr("class","x axis")
+				.call(xAxis);
+
+			var yLineAxis = lineChart.append("g")
+									.attr("class","y axis")
+									.call(yAxis);
+
+
+			function showHour(d){
+				yScale.domain([+d.min, +d.max]);
+				line.transition()
+					.duration(1000)
+					.attr("d", function(d){
+						return lineGenerator(d.values);
+					})
+
+			}
 
 
 
