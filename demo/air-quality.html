@@ -138,8 +138,8 @@
 
 			var lineChart = d3.select("body").append("svg")
 											.attr({
-												"width": minorWidth,
-												"height": minorHight
+												"width": minorWidth+minorMargin.left+minorMargin.right,
+												"height": minorHight+minorMargin.top+minorMargin.bottom
 											})
 											.append("g")
 											.attr("transform","translate("+minorMargin.left+",0)")
@@ -151,11 +151,13 @@
 								.range([0,minorWidth]);
 
 			var yScale = d3.scale.linear()
-									.range([minorHight-30, 0]);
+									.range([minorHight, 0]);
 
 			var xAxis = d3.svg.axis()
 									.scale(xScale)
 									.orient("bottom")
+									.tickFormat(d3.time.format("%H"))
+									.ticks(24)
 
 			var yAxis = d3.svg.axis()
 									.scale(yScale)
@@ -173,17 +175,12 @@
 			// draw first time point
 			yScale.domain([+data[0]["min"], +data[0]["max"]])
 
-			var line = lineChart.selectAll(".line") //?
-								.data([data[0]])
-								.enter()
-								.append("path")
-								.attr("d", function(d){
-									return lineGenerator(d.values);
-								})
+			var line = lineChart.append("path")
+								.attr("d", lineGenerator(data[0].values))
 								.attr("class","line");
 
 			var xLineAxis = lineChart.append("g")
-				.attr("transform","translate(0," + (minorHight-30) + ")")
+				.attr("transform","translate(0," + minorHight + ")")
 				.attr("class","x axis")
 				.call(xAxis);
 
@@ -192,13 +189,12 @@
 									.call(yAxis);
 
 
-			function showHour(d){
-				yScale.domain([+d.min, +d.max]);
+			function showHour(newData){
+				console.log(newData)
+				yScale.domain([+newData.min, +newData.max]);
 				line.transition()
-					.duration(1000)
-					.attr("d", function(d){
-						return lineGenerator(d.values);
-					})
+				.duration(1000)
+					.attr("d", lineGenerator(newData.values))
 
 			}
 
