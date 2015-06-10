@@ -15,12 +15,12 @@
 		// initiate settings
 		var margin = {
 			top:30,
-			right:30,
+			right:20,
 			bottom:50,
-			left:50
+			left:30
 		};
 
-		var width = 960 - margin.left - margin.right;
+		var width = 1150 - margin.left - margin.right;
 		var height = 600 - margin.top - margin.bottom;
 		var cellSize = 17;
 
@@ -37,15 +37,18 @@
 		var day = d3.time.format("%w");
 		var week = d3.time.format("%U");
 		var format = d3.time.format("%Y-%m-%d");
-
+		var year = d3.time.format("%Y"); //to differentiate 2014,2015, avoid overlap
 
 		/**
 		 *  color scale, uneven distribution
 		 *  according to official document about AQI, the domain range is 0-500
 		 */
-		var color =
+		var colorScale = d3.scale.quantile()
+		.domain([0,50,100,150,200,300,400,500])
+		.range(['#00E400','#FFFF00','#FF7E00','#FF0000','#99004C','#7E0023','#65001c','#4b0015'])
 
-
+    // meanings for each color:
+		// http://en.wikipedia.org/wiki/Air_quality_index#Mainland_China
 
 		d3.csv("../data/airquality.csv", function(err,csv){
 
@@ -77,12 +80,31 @@
 						"width": cellSize,
 						"height": cellSize,
 						"x": function(d){
-							return (week(d.key) - week(new Date(2014,3,14))) * cellSize;
+
+							if(year(d.key) == "2014"){
+								return (week(d.key) - week(new Date(2014,3,13))) * cellSize;
+							}else {
+								return ( (52 - week(new Date(2014,3,13))) + Number(week(d.key)) ) * cellSize;
+							}
 						},
 						"y": function(d){
 							return day(d.key) * cellSize;
 						}
 					})
+					.style("fill", function(d){
+						return colorScale(d.average);
+					})
+					.on("click", showHour);
+
+			rect.append("title")
+			.text(function(d){
+				return format(d.key) + " is " +  d.average;
+			})
+
+
+			/**
+			 * show hourly data in line chart
+			 */
 
 
 
