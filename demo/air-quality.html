@@ -105,7 +105,6 @@
 				d.key = format.parse(d.key)
 			});
 
-
 			/**
 			 * calender view
 			 */
@@ -159,9 +158,6 @@
 					.style("fill", function(d,i){
 						return d;
 					})
-
-
-
 
 			/**
 			 * show hourly data in line chart
@@ -251,7 +247,8 @@
 
 			// add a chart for air detail
 			// the standards for each substance are different from each other
-
+			var sliderScale = d3.scale.linear()
+														.range(d3.range(0, cellSize*9, cellSize));
 			/**
 			 *  scales for each substance
 			 */
@@ -260,27 +257,47 @@
 					.domain([0,50,150,475,800,1600,2100,2620])
 					.copy();
 
+			var slider_so2 = sliderScale
+											.domain([0,50,150,475,800,1600,2100,2620])
+											.copy();
+
 			// no2 average in last 24 hours
 			var no2 = colorScale
 					.domain([0,40,80,180,280,565,750,940])
 					.copy();
+
+			var slider_no2 = sliderScale
+									.domain([0,40,80,180,280,565,750,940])
+											.copy();
 			// pm10 average in last 24 hours
 			var pm10 = colorScale
 					.domain([0,50,150,250,350,420,500,600])
 					.copy();
+
+			var slider_pm10 = sliderScale
+									.domain([0,50,150,250,350,420,500,600])
+											.copy();
 			// co average in last 24 hours
 			var co = colorScale
 					.domain([0,2,4,14,24,36,48,60])
 					.copy();
+			var slider_co = sliderScale
+									.domain([0,2,4,14,24,36,48,60])
+											.copy();
 			// o3 average in last 1 hour
 			var o3 = colorScale
 					.domain([0,160,200,300,400,800,1000,1200])
 					.copy();
+			var slider_o3 = sliderScale
+									.domain([0,160,200,300,400,800,1000,1200])
+											.copy();
 			// pm2.5 in last 24 hours
 			var pm25 = colorScale
 					.domain([0,35,75,115,150,250,350,500])
 					.copy();
-
+			var slider_pm25 = sliderScale
+									.domain([0,35,75,115,150,250,350,500])
+											.copy();
 
 			// add warpper for these sliders
 			var sliderChart = d3.select("body").append("svg")
@@ -293,22 +310,28 @@
 					.attr("class","sliderChart");
 
 			var so2Slider = sliderChart.append("g")
-					.attr("transform","translate(0,30)");
+					.attr("transform","translate(0,30)")
+					.attr("class","slider so2")
 
 			var no2Slider = sliderChart.append("g")
-					.attr("transform","translate(0,60)");
+					.attr("transform","translate(0,60)")
+					.attr("class","slider no2")
 
 			var pm10Slider = sliderChart.append("g")
-					.attr("transform","translate(0,90)");
+					.attr("transform","translate(0,90)")
+					.attr("class","slider pm10")
 
 			var coSlider = sliderChart.append("g")
-					.attr("transform","translate(0,120)");
+					.attr("transform","translate(0,120)")
+					.attr("class","slider co")
 
 			var o3Slider = sliderChart.append("g")
-					.attr("transform","translate(0,150)");
+					.attr("transform","translate(0,150)")
+					.attr("class","slider o3")
 
 			var pm25Slider = sliderChart.append("g")
-					.attr("transform","translate(0,180)");
+					.attr("transform","translate(0,180)")
+					.attr("class","slider pm25")
 
 			// add each slider, and initiate indicator of the slider
 			// TODO:reuse?
@@ -542,12 +565,36 @@
 			}
 			// click on dots to display air details
 			function dotClick(data){
-
+				console.log(data)
 				so2Slider.select(".slider-indicator")
 						.transition()
-						.attr("x1", +data.SO2_24h)
-						.attr("x2", +data.SO2_24h)
+						.attr("x1", slider_so2(+data.SO2_24h))
+						.attr("x2", slider_so2(+data.SO2_24h))
 
+				no2Slider.select(".slider-indicator")
+						.transition()
+						.attr("x1", slider_no2(+data.NO_24h))
+						.attr("x2", slider_no2(+data.NO_24h))
+
+				pm10Slider.select(".slider-indicator")
+						.transition()
+						.attr("x1", slider_pm10(+data.pm10_24h))
+						.attr("x2", slider_pm10(+data.pm10_24h))
+
+				coSlider.select(".slider-indicator")
+						.transition()
+						.attr("x1", slider_co(+data.CO_24h))
+						.attr("x2", slider_co(+data.CO_24h))
+
+				o3Slider.select(".slider-indicator")
+						.transition()
+						.attr("x1", slider_o3(+data.O3))
+						.attr("x2", slider_o3(+data.O3))
+
+				pm25Slider.select(".slider-indicator")
+						.transition()
+						.attr("x1", slider_pm25(+data["PM2.5_24h"]))
+						.attr("x2", slider_pm25(+data["PM2.5_24h"]))
 			}
 
 
