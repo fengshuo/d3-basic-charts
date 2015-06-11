@@ -230,7 +230,9 @@
 			// draw scatterplot chart with line
 			// initialize first data point
 			var dots = lineChart.selectAll(".dot")
-					.data(data[0].values)
+					.data(data[0].values, function(d){
+						return d.TIME; // update binding by key, otherwise the selection is incorrect while updating new data
+					})
 					.enter()
 					.append("circle")
 					.attr({
@@ -504,7 +506,6 @@
 			 */
 
 			function showHour(newData){
-				console.log(newData)
 
 				yScale.domain([+newData.min, +newData.max]);
 				line.transition()
@@ -516,7 +517,9 @@
 
 				// dots transition
 				var selectedHour = lineChart.selectAll(".dot")
-						.data(newData.values);
+						.data(newData.values, function(d){
+							return d.TIME;
+						});
 
 
 
@@ -542,7 +545,7 @@
 						.append("circle")
 						.attr("class","dot")
 
-						
+
 
 
 
