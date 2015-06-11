@@ -19,6 +19,22 @@
 		fill:none;
 		stroke:#000;
 	}
+
+	.dot {
+		fill: none;
+		stroke: steelblue;
+		stroke-width: 2px;
+	}
+
+	.indicator{
+		stroke: lightgrey;
+		stroke-width: 3px;
+	}
+
+	.slider-indicator{
+		stroke: black;
+		stroke-width: 3px;
+	}
 	</style>
 	<script src="../lib/d3.js"></script>
 </head>
@@ -121,14 +137,37 @@
 			rect.append("title")
 			.text(function(d){
 				return format(d.key) + " is " +  d.average;
-			})
+			});
+
+
+			// add legends for calender view
+			svg.append("g")
+					.attr("transform","translate(0,200)")
+					.selectAll(".legend")
+					.data(colorScale.range())
+					.enter()
+					.append("rect")
+					.attr({
+						"x": function(d,i){
+							return i * cellSize
+						},
+						"y": 0,
+						"width":cellSize,
+						"height":cellSize
+					})
+					.attr("class","legend")
+					.style("fill", function(d,i){
+						return d;
+					})
+
+
 
 
 			/**
 			 * show hourly data in line chart
 			 */
 			var minorMargin = {
-				top:10,
+				top:50,
 				right:10,
 				bottom:50,
 				left:50
@@ -151,7 +190,7 @@
 								.range([0,minorWidth]);
 
 			var yScale = d3.scale.linear()
-									.range([minorHight, 0]);
+									.range([minorHight, 10]);
 
 			var xAxis = d3.svg.axis()
 									.scale(xScale)
@@ -162,9 +201,10 @@
 			var yAxis = d3.svg.axis()
 									.scale(yScale)
 									.orient("left")
+					.ticks(9)
 			// line generator
 			var lineGenerator = d3.svg.line()
-			.interpolate("basis")
+			// .interpolate("basis")
 						.x(function(d){
 							return xScale(hourParser(d.TIME))
 						})
@@ -175,7 +215,7 @@
 			// draw first time point
 			yScale.domain([+data[0]["min"], +data[0]["max"]])
 
-			var line = lineChart.append("path")
+			var line = lineChart.append("path") // there is only one line
 								.attr("d", lineGenerator(data[0].values))
 								.attr("class","line");
 
@@ -188,13 +228,325 @@
 									.attr("class","y axis")
 									.call(yAxis);
 
+			// draw scatterplot chart with line
+			// initialize first data point
+			var dots = lineChart.selectAll(".dot")
+					.data(data[0].values)
+					.enter()
+					.append("circle")
+					.attr({
+						"cx": function(d){
+							return xScale(hourParser(d.TIME))
+						},
+						"cy": function(d){
+							return yScale(+d.AQI);
+						},
+						"r": 10
+					})
+					.attr("class","dot")
+					.on("mouseenter", dotEnter)
+					.on("mouseleave", dotLeave)
+					.on("click", dotClick);
+
+
+			// add a chart for air detail
+			// the standards for each substance are different from each other
+
+			/**
+			 *  scales for each substance
+			 */
+			// so2 average in last 24 hours
+			var so2 = colorScale
+					.domain([0,50,150,475,800,1600,2100,2620])
+					.copy();
+
+			// no2 average in last 24 hours
+			var no2 = colorScale
+					.domain([0,40,80,180,280,565,750,940])
+					.copy();
+			// pm10 average in last 24 hours
+			var pm10 = colorScale
+					.domain([0,50,150,250,350,420,500,600])
+					.copy();
+			// co average in last 24 hours
+			var co = colorScale
+					.domain([0,2,4,14,24,36,48,60])
+					.copy();
+			// o3 average in last 1 hour
+			var o3 = colorScale
+					.domain([0,160,200,300,400,800,1000,1200])
+					.copy();
+			// pm2.5 in last 24 hours
+			var pm25 = colorScale
+					.domain([0,35,75,115,150,250,350,500])
+					.copy();
+
+
+			// add warpper for these sliders
+			var sliderChart = d3.select("body").append("svg")
+					.attr({
+						"width": minorWidth+minorMargin.left+minorMargin.right,
+						"height": minorHight+minorMargin.top+minorMargin.bottom
+					})
+					.append("g")
+					.attr("transform","translate("+minorMargin.left+",0)")
+					.attr("class","sliderChart");
+
+			var so2Slider = sliderChart.append("g")
+					.attr("transform","translate(0,30)");
+
+			var no2Slider = sliderChart.append("g")
+					.attr("transform","translate(0,60)");
+
+			var pm10Slider = sliderChart.append("g")
+					.attr("transform","translate(0,90)");
+
+			var coSlider = sliderChart.append("g")
+					.attr("transform","translate(0,120)");
+
+			var o3Slider = sliderChart.append("g")
+					.attr("transform","translate(0,150)");
+
+			var pm25Slider = sliderChart.append("g")
+					.attr("transform","translate(0,180)");
+
+			// add each slider, and initiate indicator of the slider
+			// TODO:reuse?
+			// so2
+			so2Slider.selectAll(".slider-legend")
+					.data(so2.range())
+					.enter()
+					.append("rect")
+					.attr({
+						"x": function(d,i){
+							return i * cellSize
+						},
+						"y": 0,
+						"width":cellSize,
+						"height":cellSize
+					})
+					.attr("class","slider-legend")
+					.style("fill", function(d,i){
+						return d;
+					});
+
+			so2Slider.append("line")
+					.attr({
+						"x1":0,
+						"y1":0,
+						"x2":0,
+						"y2":25
+					})
+					.attr("class","slider-indicator");
+
+
+			no2Slider.selectAll(".slider-legend")
+					.data(no2.range())
+					.enter()
+					.append("rect")
+					.attr({
+						"x": function(d,i){
+							return i * cellSize
+						},
+						"y": 0,
+						"width":cellSize,
+						"height":cellSize
+					})
+					.attr("class","slider-legend")
+					.style("fill", function(d,i){
+						return d;
+					});
+
+			no2Slider.append("line")
+					.attr({
+						"x1":0,
+						"y1":0,
+						"x2":0,
+						"y2":25
+					})
+					.attr("class","slider-indicator");
+
+			pm10Slider.selectAll(".slider-legend")
+					.data(pm10.range())
+					.enter()
+					.append("rect")
+					.attr({
+						"x": function(d,i){
+							return i * cellSize
+						},
+						"y": 0,
+						"width":cellSize,
+						"height":cellSize
+					})
+					.attr("class","slider-legend")
+					.style("fill", function(d,i){
+						return d;
+					});
+
+			pm10Slider.append("line")
+					.attr({
+						"x1":0,
+						"y1":0,
+						"x2":0,
+						"y2":25
+					})
+					.attr("class","slider-indicator");
+
+
+
+			coSlider.selectAll(".slider-legend")
+					.data(co.range())
+					.enter()
+					.append("rect")
+					.attr({
+						"x": function(d,i){
+							return i * cellSize
+						},
+						"y": 0,
+						"width":cellSize,
+						"height":cellSize
+					})
+					.attr("class","slider-legend")
+					.style("fill", function(d,i){
+						return d;
+					});
+
+			coSlider.append("line")
+					.attr({
+						"x1":0,
+						"y1":0,
+						"x2":0,
+						"y2":25
+					})
+					.attr("class","slider-indicator");
+
+			o3Slider.selectAll(".slider-legend")
+					.data(o3.range())
+					.enter()
+					.append("rect")
+					.attr({
+						"x": function(d,i){
+							return i * cellSize
+						},
+						"y": 0,
+						"width":cellSize,
+						"height":cellSize
+					})
+					.attr("class","slider-legend")
+					.style("fill", function(d,i){
+						return d;
+					});
+
+			o3Slider.append("line")
+					.attr({
+						"x1":0,
+						"y1":0,
+						"x2":0,
+						"y2":25
+					})
+					.attr("class","slider-indicator");
+
+			pm25Slider.selectAll(".slider-legend")
+					.data(pm25.range())
+					.enter()
+					.append("rect")
+					.attr({
+						"x": function(d,i){
+							return i * cellSize
+						},
+						"y": 0,
+						"width":cellSize,
+						"height":cellSize
+					})
+					.attr("class","slider-legend")
+					.style("fill", function(d,i){
+						return d;
+					});
+
+			pm25Slider.append("line")
+					.attr({
+						"x1":0,
+						"y1":0,
+						"x2":0,
+						"y2":25
+					})
+					.attr("class","slider-indicator");
+
+
+			/**
+			 * event handlers
+			 */
 
 			function showHour(newData){
-				console.log(newData)
 				yScale.domain([+newData.min, +newData.max]);
 				line.transition()
 				.duration(1000)
-					.attr("d", lineGenerator(newData.values))
+					.attr("d", lineGenerator(newData.values));
+
+				// no need for y axis transition in this case since the range is fixed
+				// d3.select(".y.axis").call(yAxis)
+
+				// dots transition
+				lineChart.selectAll(".dot")
+						.data(newData.values)
+						.transition()
+						.duration(1000)
+						.delay(200)
+						.attr({
+							"cx": function(d){
+								return xScale(hourParser(d.TIME))
+							},
+							"cy": function(d){
+								return yScale(+d.AQI);
+							}
+						})
+
+			};
+
+			// hover on dots to toggle indication lines
+			function dotEnter(data){
+				lineChart.append("line")
+						.attr({
+							"x1":0,
+							"x2":function(d){
+								return xScale(hourParser(data.TIME));
+							},
+							"y1":function(d){
+								return yScale(+data.AQI);
+							},
+							"y2":function(d){
+								return yScale(+data.AQI);
+							}
+						})
+						.attr("class","indicator indicator-x");
+
+				lineChart.append("line")
+						.attr({
+							"x1":function(d){
+								return xScale(hourParser(data.TIME));
+							},
+							"x2":function(d){
+								return xScale(hourParser(data.TIME));
+							},
+							"y1": minorHight,
+							"y2":function(d){
+								return yScale(+data.AQI);
+							}
+						})
+						.attr("class","indicator indicator-y");
+
+			}
+
+			function dotLeave(data){
+				lineChart.selectAll(".indicator").remove();
+			}
+			// click on dots to display air details
+			function dotClick(data){
+
+				so2Slider.select(".slider-indicator")
+						.transition()
+						.attr("x1", +data.SO2_24h)
+						.attr("x2", +data.SO2_24h)
 
 			}
 
