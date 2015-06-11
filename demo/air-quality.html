@@ -208,8 +208,10 @@
 							return yScale(Number(d.AQI))
 						});
 
-			// draw first time point
-			yScale.domain([+data[0]["min"], +data[0]["max"]])
+
+			// draw first time point as a line
+			yScale.domain([+data[0]["min"], +data[0]["max"]]);
+
 
 			var line = lineChart.append("path") // there is only one line
 								.attr("d", lineGenerator(data[0].values))
@@ -224,6 +226,7 @@
 									.attr("class","y axis")
 									.call(yAxis);
 
+
 			// draw scatterplot chart with line
 			// initialize first data point
 			var dots = lineChart.selectAll(".dot")
@@ -237,7 +240,7 @@
 						"cy": function(d){
 							return yScale(+d.AQI);
 						},
-						"r": 10
+						"r": 5
 					})
 					.attr("class","dot")
 					.on("mouseenter", dotEnter)
@@ -501,6 +504,8 @@
 			 */
 
 			function showHour(newData){
+				console.log(newData)
+
 				yScale.domain([+newData.min, +newData.max]);
 				line.transition()
 				.duration(1000)
@@ -510,9 +515,12 @@
 				// d3.select(".y.axis").call(yAxis)
 
 				// dots transition
-				lineChart.selectAll(".dot")
-						.data(newData.values)
-						.transition()
+				var selectedHour = lineChart.selectAll(".dot")
+						.data(newData.values);
+
+
+
+						selectedHour.transition()
 						.duration(1000)
 						.delay(200)
 						.attr({
@@ -523,6 +531,20 @@
 								return yScale(+d.AQI);
 							}
 						})
+
+
+							selectedHour.exit().transition()
+							.remove()
+
+
+
+						selectedHour.enter()
+						.append("circle")
+						.attr("class","dot")
+
+						
+
+
 
 			};
 
@@ -565,7 +587,6 @@
 			}
 			// click on dots to display air details
 			function dotClick(data){
-				console.log(data)
 				so2Slider.select(".slider-indicator")
 						.transition()
 						.attr("x1", slider_so2(+data.SO2_24h))
