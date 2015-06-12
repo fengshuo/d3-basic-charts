@@ -98,7 +98,7 @@
 			left:50
 		};
 
-		var width = 1150 - margin.left - margin.right;
+		var width = 2000 - margin.left - margin.right;
 		var height = 600 - margin.top - margin.bottom;
 		var cellSize = 17;
 
@@ -159,6 +159,7 @@
 					"height": "100%"
 				})
 				.append("g")
+				.attr("transform","translate(15,0)")
 
 
 
@@ -440,14 +441,21 @@
 						return d;
 					});
 
-			so2Slider.append("line")
+			var sliderIndicator_so2 = so2Slider.append("g")
+														.attr("class","slider-indicator")
+														.attr("transform","translate(0,-5)")
+
+			sliderIndicator_so2.append("line")
 					.attr({
 						"x1":0,
 						"y1":0,
 						"x2":0,
-						"y2":25
+						"y2":23
 					})
-					.attr("class","slider-indicator");
+
+			sliderIndicator_so2.append("path")
+			.attr("d", d3.svg.symbol().type("triangle-down"))
+
 
 			// no2
 			no2Slider.selectAll(".slider-legend")
@@ -467,14 +475,20 @@
 						return d;
 					});
 
-			no2Slider.append("line")
+			var sliderIndicator_no2 = no2Slider.append("g")
+														.attr("class","slider-indicator")
+														.attr("transform","translate(0,-5)")
+
+			sliderIndicator_no2.append("line")
 					.attr({
 						"x1":0,
 						"y1":0,
 						"x2":0,
-						"y2":25
+						"y2":23
 					})
-					.attr("class","slider-indicator");
+
+			sliderIndicator_no2.append("path")
+			.attr("d", d3.svg.symbol().type("triangle-down"))
 
 
 			//pm10
@@ -495,14 +509,20 @@
 						return d;
 					});
 
-			pm10Slider.append("line")
+			var sliderIndicator_pm10 = pm10Slider.append("g")
+														.attr("class","slider-indicator")
+														.attr("transform","translate(0,-5)")
+
+			sliderIndicator_pm10.append("line")
 					.attr({
 						"x1":0,
 						"y1":0,
 						"x2":0,
-						"y2":25
+						"y2":23
 					})
-					.attr("class","slider-indicator");
+
+			sliderIndicator_pm10.append("path")
+			.attr("d", d3.svg.symbol().type("triangle-down"))
 
 
 			//co
@@ -523,14 +543,20 @@
 						return d;
 					});
 
-			coSlider.append("line")
+			var sliderIndicator_co = coSlider.append("g")
+														.attr("class","slider-indicator")
+														.attr("transform","translate(0,-5)")
+
+			sliderIndicator_co.append("line")
 					.attr({
 						"x1":0,
 						"y1":0,
 						"x2":0,
-						"y2":25
+						"y2":23
 					})
-					.attr("class","slider-indicator");
+
+			sliderIndicator_co.append("path")
+			.attr("d", d3.svg.symbol().type("triangle-down"))
 
 			//o3
 			o3Slider.selectAll(".slider-legend")
@@ -550,14 +576,20 @@
 						return d;
 					});
 
-			o3Slider.append("line")
+			var sliderIndicator_o3 = o3Slider.append("g")
+														.attr("class","slider-indicator")
+														.attr("transform","translate(0,-5)")
+
+			sliderIndicator_o3.append("line")
 					.attr({
 						"x1":0,
 						"y1":0,
 						"x2":0,
-						"y2":25
+						"y2":23
 					})
-					.attr("class","slider-indicator");
+
+			sliderIndicator_o3.append("path")
+			.attr("d", d3.svg.symbol().type("triangle-down"))
 
 			//pm25
 			pm25Slider.selectAll(".slider-legend")
@@ -577,14 +609,20 @@
 						return d;
 					});
 
-			pm25Slider.append("line")
+			var sliderIndicator_pm25 = pm25Slider.append("g")
+														.attr("class","slider-indicator")
+														.attr("transform","translate(0,-5)")
+
+			sliderIndicator_pm25.append("line")
 					.attr({
 						"x1":0,
 						"y1":0,
 						"x2":0,
-						"y2":25
+						"y2":23
 					})
-					.attr("class","slider-indicator");
+
+			sliderIndicator_pm25.append("path")
+			.attr("d", d3.svg.symbol().type("triangle-down"))
 
 
 			/**
@@ -665,36 +703,32 @@
 			}
 			// click on dots to display air details
 			function dotClick(data){
-				console.log(data)
+
 				so2Slider.select(".slider-indicator")
 						.transition()
-						.attr("x1", slider_so2(+data.SO2_24h))
-						.attr("x2", slider_so2(+data.SO2_24h))
+						.attr("transform", "translate("+slider_so2(+data.SO2_24h)+",-5)")
+
 
 				no2Slider.select(".slider-indicator")
 						.transition()
-						.attr("x1", slider_no2(+data.NO_24h))
-						.attr("x2", slider_no2(+data.NO_24h))
+						.attr("transform", "translate("+slider_no2(+data.NO_24h)+",-5)")
 
 				pm10Slider.select(".slider-indicator")
 						.transition()
-						.attr("x1", slider_pm10(+data.pm10_24h))
-						.attr("x2", slider_pm10(+data.pm10_24h))
+						.attr("transform", "translate("+slider_pm10(+data.pm10_24h)+",-5)")
 
 				coSlider.select(".slider-indicator")
 						.transition()
-						.attr("x1", slider_co(+data.CO_24h))
-						.attr("x2", slider_co(+data.CO_24h))
+						.attr("transform", "translate("+slider_co(+data.CO_24h)+",-5)")
 
 				o3Slider.select(".slider-indicator")
 						.transition()
-						.attr("x1", slider_o3(+data.O3))
-						.attr("x2", slider_o3(+data.O3))
+						.attr("transform", "translate("+slider_o3(+data.O3)+",-5)")
 
 				pm25Slider.select(".slider-indicator")
 						.transition()
-						.attr("x1", slider_pm25(+data["PM2.5_24h"]))
-						.attr("x2", slider_pm25(+data["PM2.5_24h"]))
+						.attr("transform", "translate("+slider_pm25(+data["PM2.5_24h"])+",-5)")
+
 			}
 
 
