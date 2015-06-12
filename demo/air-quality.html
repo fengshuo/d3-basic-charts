@@ -28,7 +28,7 @@
 	}
 
 	.legends{
-		width: 100px;
+		width: 200px;
 		height: 100%;
 	}
 
@@ -110,9 +110,10 @@
 		var hourParser = d3.time.format("%H:%M:%S").parse; // format hourly data
 
 		/* standards */
-		var AQIStandard = [0,50,100,150,200,300,400,500]; // http://en.wikipedia.org/wiki/Air_quality_index#Mainland_China
+		// http://en.wikipedia.org/wiki/Air_quality_index#Mainland_China
+		var AQIStandard = [0,50,100,150,200,300,400,500];
 		var AQIStandardColors = ['#00E400','#FFFF00','#FF7E00','#FF0000','#99004C','#7E0023','#65001c'];
-
+		var meteData = ["Excellent","Good","Lightly Polluted","Moderately Polluted","Heavily Polluted","Severely Polluted","Severely Polluted","Severely Polluted"]
 
 
 		/* color scale */
@@ -139,7 +140,7 @@
 						"height": "100%"
 					})
 				.append("g")
-					.attr("transform", "translate("+ margin.left + "," + margin.top + ")")
+					.attr("transform", "translate("+ margin.left*3 + "," + margin.top + ")")
 
 
 		var svgHour = d3.select(".block.hours")
@@ -294,12 +295,14 @@
 
 			/**
 			 *  add legends in svgLegends correspondent with yAxis in line chart
-			 *
+			 *  color block, text label
 			 */
-			svgLegends.append("g")
+			var legends = svgLegends.append("g")
 					.selectAll(".legend")
 					.data(colorScale.range())
-					.enter()
+
+			// color blocks
+			legends.enter()
 					.append("rect")
 					.attr({
 						"x":30,
@@ -323,6 +326,21 @@
 					.style("fill", function(d,i){
 						return d;
 					});
+
+			// labels
+			legends.enter()
+				.append("text")
+				.attr({
+					"y": function(d,i){
+						return yScale(AQIStandard[i])
+					},
+					"text-anchor":"end",
+					"dy":-20,
+					"dx":25
+				})
+				.text(function(d,i){
+					return meteData[i];
+				})
 
 
 			/**
