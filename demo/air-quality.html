@@ -9,9 +9,9 @@
 	}
 
 	.day-wrapper {
-		width: 1200px;
-		height: 200px;
-		margin: 10px auto;
+		width: 1000px;
+		height: 160px;
+		margin: 5px auto;
 		overflow-x: auto;
 		overflow-y: hidden;
 	}
@@ -19,12 +19,12 @@
 	.hour-wrapper {
 		width: 1200px;
 		height: 800px;
-		margin: 100px auto;
+		margin: 5px auto;
 	}
 
 	.block {
 		display: inline-block;
-		border:1px solid red;
+
 	}
 
 	.legends{
@@ -38,7 +38,7 @@
 	}
 
 	.air {
-		width: 150px;
+		width: 180px;
 		height: 100%;
 	}
 
@@ -55,7 +55,7 @@
 	}
 
 	.dot {
-		fill: none;
+		fill: steelblue;
 		stroke: steelblue;
 		stroke-width: 2px;
 	}
@@ -65,9 +65,10 @@
 		stroke-width: 3px;
 	}
 
-	.slider-indicator{
-		stroke: black;
-		stroke-width: 3px;
+
+	.slider-indicator path{
+		fill:none;
+		stroke:#000;
 	}
 	</style>
 	<script src="../lib/d3.js"></script>
@@ -76,6 +77,7 @@
 
 <h1>Lorem ipsum dolor sit amet.</h1>
 <div class="day-wrapper"></div>
+<h2>Hourly Data</h2>
 <div class="hour-wrapper">
 	<div class="block legends"></div>
 	<div class="block hours"></div>
@@ -92,14 +94,14 @@
 		 */
 		/* margins setting */
 		var margin = {
-			top:30,
-			right:20,
+			top:10,
+			right:10,
 			bottom:30,
 			left:50
 		};
 
 		var width = 2000 - margin.left - margin.right;
-		var height = 600 - margin.top - margin.bottom;
+		var height = 250 - margin.top - margin.bottom;
 		var cellSize = 17;
 
 		/* time formatter */
@@ -129,8 +131,10 @@
 						"width": width,
 						"height": height
 					})
+					.attr("class","day-svg")
 				.append("g")
 					.attr("transform", "translate("+ margin.left + "," + margin.top + ")")
+
 
 
 		var svgLegends = d3.select(".block.legends")
@@ -223,6 +227,10 @@
 				return format(d.key) + " average AQI is " +  d.average;
 			});
 
+			/* TODO:add axis to days chart */
+			var daySVGWidth = parseInt(d3.select(".day-svg").style("width"));
+			var daySVGHeight = parseInt(d3.select(".day-svg").style("height"));
+
 
 			/**
 			 * initiate hourly data (line + scatterplot) in hour chart with the first data point
@@ -286,7 +294,7 @@
 						"cy": function(d){
 							return yScale(+d.AQI);
 						},
-						"r": 5
+						"r": 6 // if you need interaction triggered by circle, you'd better not use fill:none, otherwise it won't trigger events
 					})
 					.attr("class","dot")
 					.on("mouseenter", dotEnter)
@@ -412,27 +420,27 @@
 			/* append each air substance slider to svgAir*/
 
 			var so2Slider = svgAir.append("g")
-					.attr("transform","translate(0,30)")
+					.attr("transform","translate(50,30)")
 					.attr("class","slider so2")
 
 			var no2Slider = svgAir.append("g")
-					.attr("transform","translate(0,60)")
+					.attr("transform","translate(50,60)")
 					.attr("class","slider no2")
 
 			var pm10Slider = svgAir.append("g")
-					.attr("transform","translate(0,90)")
+					.attr("transform","translate(50,90)")
 					.attr("class","slider pm10")
 
 			var coSlider = svgAir.append("g")
-					.attr("transform","translate(0,120)")
+					.attr("transform","translate(50,120)")
 					.attr("class","slider co")
 
 			var o3Slider = svgAir.append("g")
-					.attr("transform","translate(0,150)")
+					.attr("transform","translate(50,150)")
 					.attr("class","slider o3")
 
 			var pm25Slider = svgAir.append("g")
-					.attr("transform","translate(0,180)")
+					.attr("transform","translate(50,180)")
 					.attr("class","slider pm25")
 
 			/**
@@ -440,6 +448,7 @@
 			 */
 
 			// TODO:reuse?
+			// TODO:remove lines in slider indicators
 
 			// so2
 			so2Slider.selectAll(".slider-legend")
@@ -459,20 +468,19 @@
 						return d;
 					});
 
+			so2Slider.append("text")
+				.attr({
+					"x":-15,
+					"text-anchor":"end",
+					"dy":15
+				})
+				.text("so2")
+
+
 			var sliderIndicator_so2 = so2Slider.append("g")
 														.attr("class","slider-indicator")
-														.attr("transform","translate(0,-5)")
-
-			sliderIndicator_so2.append("line")
-					.attr({
-						"x1":0,
-						"y1":0,
-						"x2":0,
-						"y2":23
-					})
-
-			sliderIndicator_so2.append("path")
-			.attr("d", d3.svg.symbol().type("triangle-down"))
+														.append("path")
+														.attr("d", d3.svg.symbol().type("triangle-down"))
 
 
 			// no2
@@ -493,20 +501,19 @@
 						return d;
 					});
 
+			no2Slider.append("text")
+				.attr({
+					"x":-15,
+					"text-anchor":"end",
+					"dy":15
+				})
+				.text("no2")
+
 			var sliderIndicator_no2 = no2Slider.append("g")
-														.attr("class","slider-indicator")
-														.attr("transform","translate(0,-5)")
-
-			sliderIndicator_no2.append("line")
-					.attr({
-						"x1":0,
-						"y1":0,
-						"x2":0,
-						"y2":23
-					})
-
-			sliderIndicator_no2.append("path")
-			.attr("d", d3.svg.symbol().type("triangle-down"))
+								.attr("class","slider-indicator")
+								.attr("transform","translate(0,-5)")
+								.append("path")
+								.attr("d", d3.svg.symbol().type("triangle-down"))
 
 
 			//pm10
@@ -527,20 +534,19 @@
 						return d;
 					});
 
+			pm10Slider.append("text")
+				.attr({
+					"x":-15,
+					"text-anchor":"end",
+					"dy":15
+				})
+				.text("pm10")
+
 			var sliderIndicator_pm10 = pm10Slider.append("g")
 														.attr("class","slider-indicator")
 														.attr("transform","translate(0,-5)")
-
-			sliderIndicator_pm10.append("line")
-					.attr({
-						"x1":0,
-						"y1":0,
-						"x2":0,
-						"y2":23
-					})
-
-			sliderIndicator_pm10.append("path")
-			.attr("d", d3.svg.symbol().type("triangle-down"))
+														.append("path")
+														.attr("d", d3.svg.symbol().type("triangle-down"))
 
 
 			//co
@@ -561,20 +567,19 @@
 						return d;
 					});
 
+			coSlider.append("text")
+				.attr({
+					"x":-15,
+					"text-anchor":"end",
+					"dy":15
+				})
+				.text("co")
+
 			var sliderIndicator_co = coSlider.append("g")
 														.attr("class","slider-indicator")
 														.attr("transform","translate(0,-5)")
-
-			sliderIndicator_co.append("line")
-					.attr({
-						"x1":0,
-						"y1":0,
-						"x2":0,
-						"y2":23
-					})
-
-			sliderIndicator_co.append("path")
-			.attr("d", d3.svg.symbol().type("triangle-down"))
+														.append("path")
+														.attr("d", d3.svg.symbol().type("triangle-down"))
 
 			//o3
 			o3Slider.selectAll(".slider-legend")
@@ -594,20 +599,19 @@
 						return d;
 					});
 
+			o3Slider.append("text")
+				.attr({
+					"x":-15,
+					"text-anchor":"end",
+					"dy":15
+				})
+				.text("o3")
+
 			var sliderIndicator_o3 = o3Slider.append("g")
 														.attr("class","slider-indicator")
 														.attr("transform","translate(0,-5)")
-
-			sliderIndicator_o3.append("line")
-					.attr({
-						"x1":0,
-						"y1":0,
-						"x2":0,
-						"y2":23
-					})
-
-			sliderIndicator_o3.append("path")
-			.attr("d", d3.svg.symbol().type("triangle-down"))
+														.append("path")
+														.attr("d", d3.svg.symbol().type("triangle-down"))
 
 			//pm25
 			pm25Slider.selectAll(".slider-legend")
@@ -627,20 +631,19 @@
 						return d;
 					});
 
+			pm25Slider.append("text")
+				.attr({
+					"x":-15,
+					"text-anchor":"end",
+					"dy":15
+				})
+				.text("pm2.5")
+
 			var sliderIndicator_pm25 = pm25Slider.append("g")
 														.attr("class","slider-indicator")
 														.attr("transform","translate(0,-5)")
-
-			sliderIndicator_pm25.append("line")
-					.attr({
-						"x1":0,
-						"y1":0,
-						"x2":0,
-						"y2":23
-					})
-
-			sliderIndicator_pm25.append("path")
-			.attr("d", d3.svg.symbol().type("triangle-down"))
+														.append("path")
+														.attr("d", d3.svg.symbol().type("triangle-down"))
 
 
 			/**
@@ -707,7 +710,7 @@
 							"x2":function(d){
 								return xScale(hourParser(data.TIME));
 							},
-							"y1": 600,
+							"y1": hourHeight,
 							"y2":function(d){
 								return yScale(+data.AQI);
 							}
