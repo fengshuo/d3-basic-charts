@@ -111,7 +111,7 @@
 
 		/* standards */
 		var AQIStandard = [0,50,100,150,200,300,400,500]; // http://en.wikipedia.org/wiki/Air_quality_index#Mainland_China
-		var AQIStandardColors = ['#00E400','#FFFF00','#FF7E00','#FF0000','#99004C','#7E0023','#65001c','#4b0015'];
+		var AQIStandardColors = ['#00E400','#FFFF00','#FF7E00','#FF0000','#99004C','#7E0023','#65001c'];
 
 
 
@@ -159,7 +159,6 @@
 					"height": "100%"
 				})
 				.append("g")
-				.attr("transform", "translate("+ margin.left + "," + margin.top + ")");
 
 
 
@@ -226,17 +225,18 @@
 			/**
 			 * initiate hourly data (line + scatterplot) in hour chart with the first data point
 			 */
+			var hourHeight = parseInt(d3.select(".hours").style("height"))/1.5;
+			var hourWidth = parseInt(d3.select(".hours").style("width")) - margin.left - margin.right;
 
 
 			var xScale = d3.time.scale()
 								.domain([hourParser("00:00:00"),hourParser("23:00:00")])
-								.range([0, parseInt(d3.select(".hours").style("width")) - margin.left - margin.right]);
+								.range([0, hourWidth]);
 								// https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=js%20string%20to%20number
 
 			var yScale = d3.scale.linear()
 			.domain([0,510]) // in this case, y domain is fixed as described in standards
-			.range([parseInt(d3.select(".hours").style("height"))/1.5, 0]);
-
+			.range([hourHeight, 0]);
 
 			var xAxis = d3.svg.axis()
 									.scale(xScale)
@@ -248,7 +248,6 @@
 					.scale(yScale)
 					.orient("left")
 					.tickValues(AQIStandard);
-
 			// line generator
 			var lineGenerator = d3.svg.line()
 						.x(function(d){
@@ -257,7 +256,6 @@
 						.y(function(d){
 							return yScale(Number(d.AQI))
 						});
-
 
 			var line = svgHour.append("path")// there is only one line, no need to data()
 								.attr("d", lineGenerator(data[0].values))
@@ -271,7 +269,6 @@
 			var yLineAxis = svgHour.append("g")
 									.attr("class","y axis")
 									.call(yAxis);
-
 
 			// draw scatterplots
 			var dots = svgHour.selectAll(".dot")
@@ -294,24 +291,32 @@
 					.on("mouseleave", dotLeave)
 					.on("click", dotClick);
 
-
 			/**
 			 *  add legends in svgLegends correspondent with yAxis in line chart
 			 *
 			 */
 			svgLegends.append("g")
-					.attr("transform","translate(0,200)")
 					.selectAll(".legend")
 					.data(colorScale.range())
 					.enter()
 					.append("rect")
 					.attr({
-						"x": function(d,i){
-							return i * cellSize
+						"x":30,
+						"y":function(d,i){
+							if(i == (AQIStandard.length-1)){
+								return 0
+							}else {
+								return yScale(AQIStandard[i+1])
+							}
 						},
-						"y": 0,
-						"width":cellSize,
-						"height":cellSize
+						"height":function(d,i){
+							if(i == (AQIStandard.length-1)){
+								return yScale(AQIStandard[i])
+							}else {
+								return yScale(AQIStandard[i]) - yScale(AQIStandard[i+1])
+							}
+						},
+						"width":cellSize
 					})
 					.attr("class","legend")
 					.style("fill", function(d,i){
