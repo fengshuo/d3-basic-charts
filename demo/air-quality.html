@@ -8,6 +8,39 @@
 		padding-bottom: 100px;
 	}
 
+	.day-wrapper {
+		width: 800px;
+		height: 200px;
+		margin: 10px auto;
+		overflow-x: auto;
+		overflow-y: hidden;
+	}
+
+	.hour-wrapper {
+		width: 900px;
+		height: 800px;
+		margin: 100px auto;
+	}
+
+	.block {
+		display: inline-block;
+	}
+
+	.legends{
+		width: 100px;
+		height: 100%;
+	}
+
+	.hours{
+		width: 590px;
+		height: 100%;
+	}
+
+	.air {
+		width: 150px;
+		height: 100%;
+	}
+
 	.line{
 		fill:none;
 		stroke: orange;
@@ -39,50 +72,99 @@
 	<script src="../lib/d3.js"></script>
 </head>
 <body>
+
+<h1>Lorem ipsum dolor sit amet.</h1>
+<div class="day-wrapper"></div>
+<div class="hour-wrapper">
+	<div class="block legends"></div>
+	<div class="block hours"></div>
+	<div class="block air"></div>
+</div>
+
 <script>
+	//TODO:year scale in calendar view, week scale
+	//TODO: grid in line chart
 
 	window.onload = function(){
-		// initiate settings
+		/**
+		 *  general setting
+		 */
+		/* margins setting */
 		var margin = {
-			top:20,
+			top:30,
 			right:20,
 			bottom:20,
 			left:30
 		};
 
 		var width = 1150 - margin.left - margin.right;
-		var height = 300 - margin.top - margin.bottom;
+		var height = 600 - margin.top - margin.bottom;
 		var cellSize = 17;
-
-
-		var svg = d3.select("body").append("svg")
-				.attr({
-					"width": width,
-					"height": height
-				})
-				.append("g")
-				.attr("transform", "translate("+ margin.left + "," + margin.top + ")");
 
 		/* time formatter */
 		var day = d3.time.format("%w");
 		var week = d3.time.format("%U");
 		var format = d3.time.format("%Y-%m-%d");
-		var year = d3.time.format("%Y"); //to differentiate 2014,2015, avoid overlap
-		var hourParser = d3.time.format("%H:%M:%S").parse;
+		var year = d3.time.format("%Y"); // to differentiate 2014,2015, avoid overlap
+		var hourParser = d3.time.format("%H:%M:%S").parse; // format hourly data
 
-		/**
-		 *  color scale, uneven distribution
-		 *  according to official document about AQI, the domain range is 0-500
-		 */
+		/* standards */
+		var AQIStandard = [0,50,100,150,200,300,400,500]; // http://en.wikipedia.org/wiki/Air_quality_index#Mainland_China
+		var AQIStandardColors = ['#00E400','#FFFF00','#FF7E00','#FF0000','#99004C','#7E0023','#65001c','#4b0015'];
+
+
+
+		/* color scale */
 		var colorScale = d3.scale.quantile()
-		.domain([0,50,100,150,200,300,400,500])
-		.range(['#00E400','#FFFF00','#FF7E00','#FF0000','#99004C','#7E0023','#65001c','#4b0015'])
+				.domain(AQIStandard)
+				.range(AQIStandardColors);
 
-    // meanings for each color:
-		// http://en.wikipedia.org/wiki/Air_quality_index#Mainland_China
 
+		/* initiate svg in blocks respectively */
+		var svgDay = d3.select(".day-wrapper")
+				.append("svg")
+					.attr({
+						"width": width,
+						"height": height
+					})
+				.append("g")
+					.attr("transform", "translate("+ margin.left + "," + margin.top + ")")
+
+
+		var svgLegends = d3.select(".block.legends")
+				.append("svg")
+					.attr({
+						"width": "100%",
+						"height": "100%"
+					})
+				.append("g")
+					.attr("transform", "translate("+ margin.left + "," + margin.top + ")")
+
+
+		var svgHour = d3.select(".block.hours")
+				.append("svg")
+					.attr({
+						"width": "100%",
+						"height": "80%"
+					})
+				.append("g")
+				.attr("transform", "translate("+ margin.left + "," + margin.top + ")");
+
+
+		var svgAir = d3.select(".block.air")
+				.append("svg")
+				.attr({
+					"width": "100%",
+					"height": "100%"
+				})
+				.append("g")
+				.attr("transform", "translate("+ margin.left + "," + margin.top + ")");
+
+
+
+		/* load data */
 		d3.csv("../data/airquality.csv", function(err,csv){
-
+			/* reconstruct data */
 			var data = d3.nest()
 					.key(function(d){
 						return d.DATE;
@@ -98,17 +180,18 @@
 				d.average = Math.round(sum / d.values.length);
 				d.max = d3.max(d.values, function(v){
 					return +v.AQI;
-				})
+				});
 				d.min = d3.min(d.values, function(v){
 					return +v.AQI;
-				})
+				});
 				d.key = format.parse(d.key)
 			});
 
 			/**
-			 * calender view
+			 * add blocks in day svg, calendar view
+			 * notice to avoid the overlap between years
 			 */
-			var rect = svg.selectAll(".day")
+			var rect = svgDay.selectAll(".day")
 					.data(data)
 					.enter()
 					.append("rect")
@@ -117,7 +200,7 @@
 						"width": cellSize,
 						"height": cellSize,
 						"x": function(d){
-
+							// avoid overlap
 							if(year(d.key) == "2014"){
 								return (week(d.key) - week(new Date(2014,3,13))) * cellSize;
 							}else {
@@ -135,72 +218,35 @@
 
 			rect.append("title")
 			.text(function(d){
-				return format(d.key) + " is " +  d.average;
+				return format(d.key) + " average AQI is " +  d.average;
 			});
 
 
-			// add legends for calender view
-			svg.append("g")
-					.attr("transform","translate(0,200)")
-					.selectAll(".legend")
-					.data(colorScale.range())
-					.enter()
-					.append("rect")
-					.attr({
-						"x": function(d,i){
-							return i * cellSize
-						},
-						"y": 0,
-						"width":cellSize,
-						"height":cellSize
-					})
-					.attr("class","legend")
-					.style("fill", function(d,i){
-						return d;
-					})
-
 			/**
-			 * show hourly data in line chart
+			 * initiate hourly data (line + scatterplot) in hour chart with the first data point
 			 */
-			var minorMargin = {
-				top:50,
-				right:10,
-				bottom:50,
-				left:50
-			}
-			var minorWidth = 960 - minorMargin.left - minorMargin.right;
-			var minorHight = 500 - minorMargin.top - minorMargin.bottom;
 
-			var lineChart = d3.select("body").append("svg")
-											.attr({
-												"width": minorWidth+minorMargin.left+minorMargin.right,
-												"height": minorHight+minorMargin.top+minorMargin.bottom
-											})
-											.append("g")
-											.attr("transform","translate("+minorMargin.left+",0)")
-											.attr("class","lineChart")
-
-			// initialize lineChart
 			var xScale = d3.time.scale()
 								.domain([hourParser("00:00:00"),hourParser("23:00:00")])
-								.range([0,minorWidth]);
+								.range([0,500]);
 
 			var yScale = d3.scale.linear()
-									.range([minorHight, 0]);
+					.range([600, 0]) //TODO: dynamically get wrapper size
+					.domain([0,510]) // in this case, y domain is fixed as described in standards
 
 			var xAxis = d3.svg.axis()
 									.scale(xScale)
 									.orient("bottom")
 									.tickFormat(d3.time.format("%H"))
-									.ticks(24)
+									.ticks(24);
 
 			var yAxis = d3.svg.axis()
-									.scale(yScale)
-									.orient("left")
-					.tickValues([0,50,100,150,200,300,400,500])
+					.scale(yScale)
+					.orient("left")
+					.tickValues(AQIStandard);
+
 			// line generator
 			var lineGenerator = d3.svg.line()
-			// .interpolate("basis")
 						.x(function(d){
 							return xScale(hourParser(d.TIME))
 						})
@@ -209,29 +255,22 @@
 						});
 
 
-			// draw first time point as a line
-			// in this case, the yscale domain is fixed
-
-			yScale.domain([0,510]);
-
-
-			var line = lineChart.append("path") // there is only one line
+			var line = svgHour.append("path")// there is only one line, no need to data()
 								.attr("d", lineGenerator(data[0].values))
 								.attr("class","line");
 
-			var xLineAxis = lineChart.append("g")
-				.attr("transform","translate(0," + minorHight + ")")
+			var xLineAxis = svgHour.append("g")
+				.attr("transform","translate(0," + 600 + ")")
 				.attr("class","x axis")
 				.call(xAxis);
 
-			var yLineAxis = lineChart.append("g")
+			var yLineAxis = svgHour.append("g")
 									.attr("class","y axis")
 									.call(yAxis);
 
 
-			// draw scatterplot chart with line
-			// initialize first data point
-			var dots = lineChart.selectAll(".dot")
+			// draw scatterplots
+			var dots = svgHour.selectAll(".dot")
 					.data(data[0].values, function(d){
 						return d.TIME; // update binding by key, otherwise the selection is incorrect while updating new data
 					})
@@ -252,99 +291,131 @@
 					.on("click", dotClick);
 
 
+			/**
+			 *  add legends in svgLegends correspondent with yAxis in line chart
+			 *
+			 */
+			svgLegends.append("g")
+					.attr("transform","translate(0,200)")
+					.selectAll(".legend")
+					.data(colorScale.range())
+					.enter()
+					.append("rect")
+					.attr({
+						"x": function(d,i){
+							return i * cellSize
+						},
+						"y": 0,
+						"width":cellSize,
+						"height":cellSize
+					})
+					.attr("class","legend")
+					.style("fill", function(d,i){
+						return d;
+					});
+
+
+			/**
+			 * add sliders in svgAir to response to scatterplots in svgHour
+			 */
+
+			/* standards for each substance in the air */
+			var so2 = [0,50,150,475,800,1600,2100,2620]; // so2 average in last 24 hours
+			var no2 = [0,40,80,180,280,565,750,940]; // no2 average in last 24 hours
+			var pm10 = [0,50,150,250,350,420,500,600]; // pm10 average in last 24 hours
+			var co = [0,2,4,14,24,36,48,60]; // co average in last 24 hours
+			var o3 = [0,160,200,300,400,800,1000,1200]; // calculation for o3 is average in last 1 hour
+			var pm25 = [0,35,75,115,150,250,350,500]; // pm2.5 average in last 24 hours
+
 			// add a chart for air detail
 			// the standards for each substance are different from each other
 			var sliderScale = d3.scale.linear()
-														.range(d3.range(0, cellSize*9, cellSize));
+					.range(d3.range(0, cellSize*9, cellSize));
 			/**
 			 *  scales for each substance
 			 */
-			// so2 average in last 24 hours
-			var so2 = colorScale
-					.domain([0,50,150,475,800,1600,2100,2620])
+
+			var so2Scale = colorScale
+					.domain(so2)
 					.copy();
 
 			var slider_so2 = sliderScale
-											.domain([0,50,150,475,800,1600,2100,2620])
-											.copy();
+					.domain(so2)
+					.copy();
 
-			// no2 average in last 24 hours
-			var no2 = colorScale
-					.domain([0,40,80,180,280,565,750,940])
+			var no2Scale = colorScale
+					.domain(no2)
 					.copy();
 
 			var slider_no2 = sliderScale
-									.domain([0,40,80,180,280,565,750,940])
-											.copy();
-			// pm10 average in last 24 hours
-			var pm10 = colorScale
-					.domain([0,50,150,250,350,420,500,600])
+							.domain(no2)
+							.copy();
+
+			var pm10Scale = colorScale
+					.domain(pm10)
 					.copy();
 
 			var slider_pm10 = sliderScale
-									.domain([0,50,150,250,350,420,500,600])
-											.copy();
-			// co average in last 24 hours
-			var co = colorScale
-					.domain([0,2,4,14,24,36,48,60])
+						.domain(pm10)
+						.copy();
+
+			var coScale = colorScale
+					.domain(co)
 					.copy();
+
 			var slider_co = sliderScale
-									.domain([0,2,4,14,24,36,48,60])
-											.copy();
-			// o3 average in last 1 hour
-			var o3 = colorScale
-					.domain([0,160,200,300,400,800,1000,1200])
+					.domain(co)
+					.copy();
+
+			var o3Scale = colorScale
+					.domain(o3)
 					.copy();
 			var slider_o3 = sliderScale
-									.domain([0,160,200,300,400,800,1000,1200])
-											.copy();
-			// pm2.5 in last 24 hours
-			var pm25 = colorScale
-					.domain([0,35,75,115,150,250,350,500])
+					.domain(o3)
+					.copy();
+
+			var pm25Scale = colorScale
+					.domain(pm25)
 					.copy();
 			var slider_pm25 = sliderScale
-									.domain([0,35,75,115,150,250,350,500])
-											.copy();
+					.domain(pm25)
+					.copy();
 
-			// add warpper for these sliders
-			var sliderChart = d3.select("body").append("svg")
-					.attr({
-						"width": minorWidth+minorMargin.left+minorMargin.right,
-						"height": minorHight+minorMargin.top+minorMargin.bottom
-					})
-					.append("g")
-					.attr("transform","translate("+minorMargin.left+",0)")
-					.attr("class","sliderChart");
+			/* append each air substance slider to svgAir*/
 
-			var so2Slider = sliderChart.append("g")
+			var so2Slider = svgAir.append("g")
 					.attr("transform","translate(0,30)")
 					.attr("class","slider so2")
 
-			var no2Slider = sliderChart.append("g")
+			var no2Slider = svgAir.append("g")
 					.attr("transform","translate(0,60)")
 					.attr("class","slider no2")
 
-			var pm10Slider = sliderChart.append("g")
+			var pm10Slider = svgAir.append("g")
 					.attr("transform","translate(0,90)")
 					.attr("class","slider pm10")
 
-			var coSlider = sliderChart.append("g")
+			var coSlider = svgAir.append("g")
 					.attr("transform","translate(0,120)")
 					.attr("class","slider co")
 
-			var o3Slider = sliderChart.append("g")
+			var o3Slider = svgAir.append("g")
 					.attr("transform","translate(0,150)")
 					.attr("class","slider o3")
 
-			var pm25Slider = sliderChart.append("g")
+			var pm25Slider = svgAir.append("g")
 					.attr("transform","translate(0,180)")
 					.attr("class","slider pm25")
 
-			// add each slider, and initiate indicator of the slider
+			/**
+			 * add and initiate indicator for each slider
+			 */
+
 			// TODO:reuse?
+
 			// so2
 			so2Slider.selectAll(".slider-legend")
-					.data(so2.range())
+					.data(so2Scale.range())
 					.enter()
 					.append("rect")
 					.attr({
@@ -369,9 +440,9 @@
 					})
 					.attr("class","slider-indicator");
 
-
+			// no2
 			no2Slider.selectAll(".slider-legend")
-					.data(no2.range())
+					.data(no2Scale.range())
 					.enter()
 					.append("rect")
 					.attr({
@@ -396,8 +467,10 @@
 					})
 					.attr("class","slider-indicator");
 
+
+			//pm10
 			pm10Slider.selectAll(".slider-legend")
-					.data(pm10.range())
+					.data(pm10Scale.range())
 					.enter()
 					.append("rect")
 					.attr({
@@ -423,9 +496,9 @@
 					.attr("class","slider-indicator");
 
 
-
+			//co
 			coSlider.selectAll(".slider-legend")
-					.data(co.range())
+					.data(coScale.range())
 					.enter()
 					.append("rect")
 					.attr({
@@ -450,8 +523,9 @@
 					})
 					.attr("class","slider-indicator");
 
+			//o3
 			o3Slider.selectAll(".slider-legend")
-					.data(o3.range())
+					.data(o3Scale.range())
 					.enter()
 					.append("rect")
 					.attr({
@@ -476,8 +550,9 @@
 					})
 					.attr("class","slider-indicator");
 
+			//pm25
 			pm25Slider.selectAll(".slider-legend")
-					.data(pm25.range())
+					.data(pm25Scale.range())
 					.enter()
 					.append("rect")
 					.attr({
@@ -514,48 +589,37 @@
 				.duration(1000)
 					.attr("d", lineGenerator(newData.values));
 
-				// no need for y axis transition in this case since the range is fixed
-				// d3.select(".y.axis").call(yAxis)
-
 				// dots transition
-				var selectedHour = lineChart.selectAll(".dot")
+				/* handle update, enter, exit selection*/
+				var selectedHour = svgHour.selectAll(".dot")
 						.data(newData.values, function(d){
 							return d.TIME;
 						});
 
+				selectedHour.transition()
+				.duration(1000)
+				.delay(200)
+				.attr({
+					"cx": function(d){
+						return xScale(hourParser(d.TIME))
+					},
+					"cy": function(d){
+						return yScale(+d.AQI);
+					}
+				});
 
+				selectedHour.exit().transition()
+				.remove();
 
-						selectedHour.transition()
-						.duration(1000)
-						.delay(200)
-						.attr({
-							"cx": function(d){
-								return xScale(hourParser(d.TIME))
-							},
-							"cy": function(d){
-								return yScale(+d.AQI);
-							}
-						})
-
-
-							selectedHour.exit().transition()
-							.remove()
-
-
-
-						selectedHour.enter()
-						.append("circle")
-						.attr("class","dot")
-
-
-
-
+				selectedHour.enter()
+				.append("circle")
+				.attr("class","dot")
 
 			};
 
 			// hover on dots to toggle indication lines
 			function dotEnter(data){
-				lineChart.append("line")
+				svgHour.append("line")
 						.attr({
 							"x1":0,
 							"x2":function(d){
@@ -570,7 +634,7 @@
 						})
 						.attr("class","indicator indicator-x");
 
-				lineChart.append("line")
+				svgHour.append("line")
 						.attr({
 							"x1":function(d){
 								return xScale(hourParser(data.TIME));
@@ -578,7 +642,7 @@
 							"x2":function(d){
 								return xScale(hourParser(data.TIME));
 							},
-							"y1": minorHight,
+							"y1": 600,
 							"y2":function(d){
 								return yScale(+data.AQI);
 							}
@@ -588,7 +652,7 @@
 			}
 
 			function dotLeave(data){
-				lineChart.selectAll(".indicator").remove();
+				svgHour.selectAll(".indicator").remove();
 			}
 			// click on dots to display air details
 			function dotClick(data){
