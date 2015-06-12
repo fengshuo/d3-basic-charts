@@ -42,6 +42,12 @@
 		height: 100%;
 	}
 
+	.days-axis path,
+	.days-axis line{
+		fill:none;
+		stroke:#000;
+	}
+
 	.line{
 		fill:none;
 		stroke: orange;
@@ -101,7 +107,7 @@
 		};
 
 		var width = 2000 - margin.left - margin.right;
-		var height = 250 - margin.top - margin.bottom;
+		var height = 200 - margin.top - margin.bottom;
 		var cellSize = 17;
 
 		/* time formatter */
@@ -229,7 +235,21 @@
 
 			/* TODO:add axis to days chart */
 			var daySVGWidth = parseInt(d3.select(".day-svg").style("width"));
-			var daySVGHeight = parseInt(d3.select(".day-svg").style("height"));
+
+				var days_yscale = d3.time.scale()
+													.domain([new Date(2015,5,7), new Date(2015,5,14)])
+													.range([0, cellSize*7]);
+
+
+			var days_yaxis = d3.svg.axis()
+											.scale(days_yscale)
+											.orient("left")
+											.tickFormat(d3.time.format("%a"))
+											.ticks(d3.time.day, 3)
+
+			svgDay.append("g")
+						.attr("class","days-axis days-y")
+						.call(days_yaxis)
 
 
 			/**
