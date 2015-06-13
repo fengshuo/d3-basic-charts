@@ -2,15 +2,26 @@
 <html>
 <head lang="en">
 	<meta charset="UTF-8">
-	<title>Calender View</title>
+	<title>Air Quality of Beijing</title>
 	<style>
+
 	body{
+		padding-top: 20px;
 		padding-bottom: 100px;
+		font-family: arial, 'Hiragino Sans GB',Tahoma, Arial, Helvetica, STHeiti, sans-serif;
+		font-size: 14px;
+		text-align: center;
+	}
+
+
+	/* layouts */
+	.block {
+		display: inline-block;
 	}
 
 	.day-wrapper {
 		width: 1000px;
-		height: 160px;
+		height: 180px;
 		margin: 5px auto;
 		overflow-x: auto;
 		overflow-y: hidden;
@@ -18,15 +29,16 @@
 
 	.hour-wrapper {
 		width: 1200px;
-		height: 800px;
+		height: 600px;
 		margin: 5px auto;
 	}
 
-	.block {
-		display: inline-block;
-
+	.txt-wrapper {
+		text-align: left;
+		padding: 10px 30px;
 	}
 
+	/* svg styles */
 	.legends{
 		width: 200px;
 		height: 100%;
@@ -42,16 +54,23 @@
 		height: 100%;
 	}
 
-	.days-axis path,
-	.days-axis line{
+	.days-axis path {
+		display: none;
+	}
+
+	.days-axis line {
 		fill:none;
 		stroke:#000;
+	}
+
+	.days-axis.days-x line{
+		display: none;
 	}
 
 	.line{
 		fill:none;
 		stroke: orange;
-		stroke-width: 1.5px;
+		stroke-width: 1px;
 	}
 
 	.axis path,
@@ -60,6 +79,24 @@
 		stroke:#000;
 	}
 
+	.day-tip {
+		position: absolute;
+		width: 100px;
+		padding: 3px;
+		background: rgba(0, 0, 0, 0.6);
+		color: #fff;
+		border-radius: 10px;
+	}
+
+	.day-tip:after{
+		display: block;
+		content: "";
+		position: absolute;
+		top: 100%;
+		left:45px;
+		border:10px solid transparent;
+		border-top: 10px solid rgba(0, 0, 0, 0.6);
+	}
 	.dot {
 		fill: steelblue;
 		stroke: steelblue;
@@ -68,36 +105,51 @@
 
 	.indicator{
 		stroke: lightgrey;
-		stroke-width: 3px;
+		stroke-width: 2px;
+		stroke-dasharray: 10;
 	}
-
 
 	.slider-indicator path{
 		fill:none;
 		stroke:#000;
 	}
+
 	</style>
 	<script src="../lib/d3.js"></script>
 </head>
 <body>
 
-<h1>Lorem ipsum dolor sit amet.</h1>
+<h1>Air Quality Index of Beijing (2014/04/14-2015/06/09)</h1>
 <div class="day-wrapper"></div>
 <h2>Hourly Data</h2>
+<p>Click on hourly data to see index of each pollution substance</p>
 <div class="hour-wrapper">
 	<div class="block legends"></div>
 	<div class="block hours"></div>
 	<div class="block air"></div>
 </div>
+<div class="txt-wrapper">
+	<h3>Air Quality Index and Health Implications</h3>
+	<ul>
+		<li>0-50: Excellent. No health implications.</li>
+		<li>51-100: Good. Few hypersensitive individuals should reduce outdoor exercise.</li>
+		<li>101-150: Lightly Polluted. Slight irritations may occur, individuals with breathing or heart problems should reduce outdoor exercise.</li>
+		<li>151–200: Moderately Polluted. Slight irritations may occur, individuals with breathing or heart problems should reduce outdoor exercise.</li>
+		<li>201–300: Heavily Polluted. Healthy people will be noticeably affected. People with breathing or heart problems will experience reduced endurance in activities. These individuals and elders should remain indoors and restrict activities.</li>
+		<li>300+: Severely Polluted. Healthy people will experience reduced endurance in activities. There may be strong irritations and symptoms and may trigger other illnesses. Elders and the sick should remain indoors and avoid exercise. Healthy individuals should avoid out door activities.</li>
+	</ul>
+	<h3>AQI Calculation</h3>
+	<p>As indicated <a href="http://kjs.mep.gov.cn/hjbhbz/bzwb/dqhjbh/jcgfffbz/201203/W020120410332725219541.pdf">here</a>, the
+		general AQI is the max of IAQIs, which is quality index for each pollution substance including SO2,, NO2, CO, O3, PM10, PM2.5.
+	</p>
+</div>
 
 <script>
-	//TODO:year scale in calendar view
-	//TODO: grid in line chart
-
 	window.onload = function(){
 		/**
 		 *  general setting
 		 */
+
 		/* margins setting */
 		var margin = {
 			top:10,
@@ -106,7 +158,7 @@
 			left:50
 		};
 
-		var width = 2000 - margin.left - margin.right;
+		var width = 1150 - margin.left - margin.right;
 		var height = 200 - margin.top - margin.bottom;
 		var cellSize = 17;
 
@@ -121,7 +173,7 @@
 		// http://en.wikipedia.org/wiki/Air_quality_index#Mainland_China
 		var AQIStandard = [0,50,100,150,200,300,400,500];
 		var AQIStandardColors = ['#00E400','#FFFF00','#FF7E00','#FF0000','#99004C','#7E0023','#65001c'];
-		var meteData = ["Excellent","Good","Lightly Polluted","Moderately Polluted","Heavily Polluted","Severely Polluted","Severely Polluted","Severely Polluted"]
+		var metaData = ["Excellent","Good","Lightly Polluted","Moderately Polluted","Heavily Polluted","Severely Polluted","Severely Polluted","Severely Polluted"]
 
 
 		/* color scale */
@@ -131,6 +183,7 @@
 
 
 		/* initiate svg in blocks respectively */
+		// TODO: reuse
 		var svgDay = d3.select(".day-wrapper")
 				.append("svg")
 					.attr({
@@ -140,7 +193,6 @@
 					.attr("class","day-svg")
 				.append("g")
 					.attr("transform", "translate("+ margin.left + "," + margin.top + ")")
-
 
 
 		var svgLegends = d3.select(".block.legends")
@@ -176,6 +228,7 @@
 
 		/* load data */
 		d3.csv("../data/airquality.csv", function(err,csv){
+			//NOTE: the data is from 2014-04
 			/* reconstruct data */
 			var data = d3.nest()
 					.key(function(d){
@@ -226,19 +279,14 @@
 					.style("fill", function(d){
 						return colorScale(d.average);
 					})
+					.on("mouseenter", showDayTip)
+					.on("mouseleave", removeDayTip)
 					.on("click", showHour);
 
-			rect.append("title")
-			.text(function(d){
-				return format(d.key) + " average AQI is " +  d.average;
-			});
 
-			/* TODO:add axis to days chart */
-			var daySVGWidth = parseInt(d3.select(".day-svg").style("width"));
-
-				var days_yscale = d3.time.scale()
-													.domain([new Date(2015,5,7), new Date(2015,5,14)])
-													.range([0, cellSize*7]);
+			var days_yscale = d3.time.scale()
+								.domain([new Date(2015,5,7), new Date(2015,5,14)])
+								.range([0, cellSize*7]);
 
 
 			var days_yaxis = d3.svg.axis()
@@ -250,6 +298,30 @@
 			svgDay.append("g")
 						.attr("class","days-axis days-y")
 						.call(days_yaxis)
+
+			// x axis (year,month)
+			var daySVGWidth = parseInt(d3.select(".day-svg").style("width"));
+
+			var days_xscale = d3.time.scale()
+					.interpolate(function(a,b){
+						return function(t){
+							return (a+t*(b-a))/1.06;  //TODO
+							// NOTE: in this case, the x axe is not fixed time range
+							// use time scale might not be appropriate
+						}
+					})
+					.domain([data[0].key, data[data.length-1].key])
+					.range([0, daySVGWidth])
+
+
+			var days_xaxis = d3.svg.axis()
+						.scale(days_xscale)
+					.orient("bottom")
+
+			svgDay.append("g")
+					.attr("transform","translate(0,"+cellSize*7+")")
+					.attr("class","days-axis days-x")
+					.call(days_xaxis)
 
 
 			/**
@@ -363,11 +435,17 @@
 						return yScale(AQIStandard[i])
 					},
 					"text-anchor":"end",
-					"dy":-20,
+					"dy": function(d,i){
+						if(i == (AQIStandard.length-1)){
+							return -yScale(AQIStandard[i])/2
+						}else {
+							return -(yScale(AQIStandard[i]) - yScale(AQIStandard[i+1]))/2
+						}
+					},
 					"dx":25
 				})
 				.text(function(d,i){
-					return meteData[i];
+					return metaData[i];
 				})
 
 
@@ -467,8 +545,7 @@
 			 * add and initiate indicator for each slider
 			 */
 
-			// TODO:reuse?
-			// TODO:remove lines in slider indicators
+			// TODO:reuse
 
 			// so2
 			so2Slider.selectAll(".slider-legend")
@@ -671,8 +748,6 @@
 			 */
 
 			function showHour(newData){
-				console.log(newData)
-
 				line.transition()
 				.duration(1000)
 					.attr("d", lineGenerator(newData.values));
@@ -683,6 +758,19 @@
 						.data(newData.values, function(d){
 							return d.TIME;
 						});
+
+				selectedHour.enter()
+						.append("circle")
+						.attr({
+							"cx": function(d){
+								return xScale(hourParser(d.TIME))
+							},
+							"cy": function(d){
+								return yScale(+d.AQI);
+							},
+							"r":6
+						})
+						.attr("class","dot");
 
 				selectedHour.transition()
 				.duration(1000)
@@ -696,14 +784,34 @@
 					}
 				});
 
-				selectedHour.exit().transition()
-				.remove();
 
-				selectedHour.enter()
-				.append("circle")
-				.attr("class","dot")
+				selectedHour.exit().transition().remove();
 
 			};
+
+			function showDayTip(d){
+				var xPos, yPos;
+
+				if(year(d.key) == "2014"){
+					xPos = (week(d.key) - week(new Date(2014,3,13))) * cellSize;
+				}else {
+					xPos =  ( (52 - week(new Date(2014,3,13))) + Number(week(d.key)) ) * cellSize;
+				}
+
+				yPos = day(d.key) * cellSize;
+
+				d3.select(".day-wrapper").append("div")
+						.attr("class","day-tip")
+						.style({
+							"top": yPos + d3.select(".day-wrapper").node().getBoundingClientRect().top - 50 + "px",
+							"left": xPos + 25 + "px"
+						})
+						.html(format(d.key) + " average AQI is " +  d.average);
+			}
+
+			function removeDayTip(){
+				d3.select(".day-wrapper").select(".day-tip").remove();
+			}
 
 			// hover on dots to toggle indication lines
 			function dotEnter(data){
@@ -769,12 +877,7 @@
 				pm25Slider.select(".slider-indicator")
 						.transition()
 						.attr("transform", "translate("+slider_pm25(+data["PM2.5_24h"])+",-5)")
-
 			}
-
-
-
-
 
 		})
 	};
