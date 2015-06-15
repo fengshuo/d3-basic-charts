@@ -811,8 +811,8 @@
 				d3.select(".day-wrapper").append("div")
 						.attr("class","day-tip")
 						.style({
-							"top": yPos + d3.select(".day-wrapper").node().getBoundingClientRect().top - 50 + "px",
-							"left": xPos + 25 + "px"
+							"top": yPos + d3.select(".day-wrapper").node().getBoundingClientRect().top - 25 + "px",
+							"left": xPos + d3.select(".day-wrapper").node().getBoundingClientRect().left + "px"
 						})
 						.html(format(d.key) + " average AQI is " +  d.average);
 			}
