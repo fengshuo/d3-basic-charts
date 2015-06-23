@@ -469,288 +469,69 @@
 			var o3 = [0,160,200,300,400,800,1000,1200]; // calculation for o3 is average in last 1 hour
 			var pm25 = [0,35,75,115,150,250,350,500]; // pm2.5 average in last 24 hours
 
-			// add a chart for air detail
-			// the standards for each substance are different from each other
-			var sliderScale = d3.scale.linear()
-					.range(d3.range(0, cellSize*9, cellSize));
-			/**
-			 *  scales for each substance
-			 */
 
-			var so2Scale = colorScale
-					.domain(so2)
-					.copy();
+			function sliderChart(setting){
+				var type = setting.type;
+				var standard = setting.standard;
+				var posY = setting.posY;
 
-			var slider_so2 = sliderScale
-					.domain(so2)
-					.copy();
+				var scaleRect = d3.scale.linear()
+								.range(d3.range(0, cellSize*9, cellSize))
+								.domain(standard);
 
-			var no2Scale = colorScale
-					.domain(no2)
-					.copy();
+				var scaleColor = colorScale
+								.domain(standard)
+								.copy();
 
-			var slider_no2 = sliderScale
-							.domain(no2)
-							.copy();
+				var slider = svgAir.append("g")
+						.attr("transform","translate(50," + posY + ")")
+						.attr("class","slider " + type);
 
-			var pm10Scale = colorScale
-					.domain(pm10)
-					.copy();
+				slider.selectAll(".slider-legend")
+						.data(scaleColor.range())
+						.enter()
+						.append("rect")
+						.attr({
+							"x": function(d,i){
+								return i * cellSize
+							},
+							"y": 0,
+							"width":cellSize,
+							"height":cellSize
+						})
+						.attr("class","slider-legend")
+						.style("fill", function(d){
+							return d;
+						});
 
-			var slider_pm10 = sliderScale
-						.domain(pm10)
-						.copy();
+				slider.append("text")
+						.attr({
+							"x":-15,
+							"text-anchor":"end",
+							"dy":15
+						})
+						.text(type)
 
-			var coScale = colorScale
-					.domain(co)
-					.copy();
+				slider.append("g")
+						.attr("class","slider-indicator")
+						.attr("transform","translate(0,-5)")
+						.append("path")
+						.attr("d", d3.svg.symbol().type("triangle-down"));
 
-			var slider_co = sliderScale
-					.domain(co)
-					.copy();
+				return {
+					scaleRect: scaleRect,
+					slider: slider
+				}
 
-			var o3Scale = colorScale
-					.domain(o3)
-					.copy();
-			var slider_o3 = sliderScale
-					.domain(o3)
-					.copy();
+			}
 
-			var pm25Scale = colorScale
-					.domain(pm25)
-					.copy();
-			var slider_pm25 = sliderScale
-					.domain(pm25)
-					.copy();
-
-			/* append each air substance slider to svgAir*/
-
-			var so2Slider = svgAir.append("g")
-					.attr("transform","translate(50,30)")
-					.attr("class","slider so2")
-
-			var no2Slider = svgAir.append("g")
-					.attr("transform","translate(50,60)")
-					.attr("class","slider no2")
-
-			var pm10Slider = svgAir.append("g")
-					.attr("transform","translate(50,90)")
-					.attr("class","slider pm10")
-
-			var coSlider = svgAir.append("g")
-					.attr("transform","translate(50,120)")
-					.attr("class","slider co")
-
-			var o3Slider = svgAir.append("g")
-					.attr("transform","translate(50,150)")
-					.attr("class","slider o3")
-
-			var pm25Slider = svgAir.append("g")
-					.attr("transform","translate(50,180)")
-					.attr("class","slider pm25")
-
-			/**
-			 * add and initiate indicator for each slider
-			 */
-
-			// TODO:reuse
-
-			// so2
-			so2Slider.selectAll(".slider-legend")
-					.data(so2Scale.range())
-					.enter()
-					.append("rect")
-					.attr({
-						"x": function(d,i){
-							return i * cellSize
-						},
-						"y": 0,
-						"width":cellSize,
-						"height":cellSize
-					})
-					.attr("class","slider-legend")
-					.style("fill", function(d,i){
-						return d;
-					});
-
-			so2Slider.append("text")
-				.attr({
-					"x":-15,
-					"text-anchor":"end",
-					"dy":15
-				})
-				.text("so2")
-
-
-			var sliderIndicator_so2 = so2Slider.append("g")
-														.attr("class","slider-indicator")
-														.append("path")
-														.attr("d", d3.svg.symbol().type("triangle-down"))
-
-
-			// no2
-			no2Slider.selectAll(".slider-legend")
-					.data(no2Scale.range())
-					.enter()
-					.append("rect")
-					.attr({
-						"x": function(d,i){
-							return i * cellSize
-						},
-						"y": 0,
-						"width":cellSize,
-						"height":cellSize
-					})
-					.attr("class","slider-legend")
-					.style("fill", function(d,i){
-						return d;
-					});
-
-			no2Slider.append("text")
-				.attr({
-					"x":-15,
-					"text-anchor":"end",
-					"dy":15
-				})
-				.text("no2")
-
-			var sliderIndicator_no2 = no2Slider.append("g")
-								.attr("class","slider-indicator")
-								.attr("transform","translate(0,-5)")
-								.append("path")
-								.attr("d", d3.svg.symbol().type("triangle-down"))
-
-
-			//pm10
-			pm10Slider.selectAll(".slider-legend")
-					.data(pm10Scale.range())
-					.enter()
-					.append("rect")
-					.attr({
-						"x": function(d,i){
-							return i * cellSize
-						},
-						"y": 0,
-						"width":cellSize,
-						"height":cellSize
-					})
-					.attr("class","slider-legend")
-					.style("fill", function(d,i){
-						return d;
-					});
-
-			pm10Slider.append("text")
-				.attr({
-					"x":-15,
-					"text-anchor":"end",
-					"dy":15
-				})
-				.text("pm10")
-
-			var sliderIndicator_pm10 = pm10Slider.append("g")
-														.attr("class","slider-indicator")
-														.attr("transform","translate(0,-5)")
-														.append("path")
-														.attr("d", d3.svg.symbol().type("triangle-down"))
-
-
-			//co
-			coSlider.selectAll(".slider-legend")
-					.data(coScale.range())
-					.enter()
-					.append("rect")
-					.attr({
-						"x": function(d,i){
-							return i * cellSize
-						},
-						"y": 0,
-						"width":cellSize,
-						"height":cellSize
-					})
-					.attr("class","slider-legend")
-					.style("fill", function(d,i){
-						return d;
-					});
-
-			coSlider.append("text")
-				.attr({
-					"x":-15,
-					"text-anchor":"end",
-					"dy":15
-				})
-				.text("co")
-
-			var sliderIndicator_co = coSlider.append("g")
-														.attr("class","slider-indicator")
-														.attr("transform","translate(0,-5)")
-														.append("path")
-														.attr("d", d3.svg.symbol().type("triangle-down"))
-
-			//o3
-			o3Slider.selectAll(".slider-legend")
-					.data(o3Scale.range())
-					.enter()
-					.append("rect")
-					.attr({
-						"x": function(d,i){
-							return i * cellSize
-						},
-						"y": 0,
-						"width":cellSize,
-						"height":cellSize
-					})
-					.attr("class","slider-legend")
-					.style("fill", function(d,i){
-						return d;
-					});
-
-			o3Slider.append("text")
-				.attr({
-					"x":-15,
-					"text-anchor":"end",
-					"dy":15
-				})
-				.text("o3")
-
-			var sliderIndicator_o3 = o3Slider.append("g")
-														.attr("class","slider-indicator")
-														.attr("transform","translate(0,-5)")
-														.append("path")
-														.attr("d", d3.svg.symbol().type("triangle-down"))
-
-			//pm25
-			pm25Slider.selectAll(".slider-legend")
-					.data(pm25Scale.range())
-					.enter()
-					.append("rect")
-					.attr({
-						"x": function(d,i){
-							return i * cellSize
-						},
-						"y": 0,
-						"width":cellSize,
-						"height":cellSize
-					})
-					.attr("class","slider-legend")
-					.style("fill", function(d,i){
-						return d;
-					});
-
-			pm25Slider.append("text")
-				.attr({
-					"x":-15,
-					"text-anchor":"end",
-					"dy":15
-				})
-				.text("pm2.5")
-
-			var sliderIndicator_pm25 = pm25Slider.append("g")
-														.attr("class","slider-indicator")
-														.attr("transform","translate(0,-5)")
-														.append("path")
-														.attr("d", d3.svg.symbol().type("triangle-down"))
-
-
+			// initialize
+			var so2Slider = sliderChart({type:'SO2', standard: so2, posY: 30});
+			var no2Slider = sliderChart({type:'NO2', standard: no2, posY: 60});
+			var pm10Slider = sliderChart({type:'PM10', standard: pm10, posY: 90});
+			var coSlider = sliderChart({type:'CO', standard: co, posY: 120});
+			var o3Slider = sliderChart({type:'O3', standard: o3, posY: 150});
+			var pm25Slider = sliderChart({type:'pm2.5', standard: pm25, posY: 180});
 			/**
 			 * event handlers
 			 */
@@ -861,30 +642,19 @@
 			// click on dots to display air details
 			function dotClick(data){
 
-				so2Slider.select(".slider-indicator")
-						.transition()
-						.attr("transform", "translate("+slider_so2(+data.SO2_24h)+",-5)")
+				function updateIndicator(source){
+					for(var i=0;i<source.length;i++){
+						source[i][0].slider.select(".slider-indicator")
+									.transition()
+									.attr("transform", "translate("+source[i][0].scaleRect(+data[source[i][1]])+",-5)")
+					}
 
+				}
 
-				no2Slider.select(".slider-indicator")
-						.transition()
-						.attr("transform", "translate("+slider_no2(+data.NO_24h)+",-5)")
+				var air = [[so2Slider,"SO2_24h"],[no2Slider,"NO_24h"],[pm10Slider, "pm10_24h"],[coSlider,"CO_24h"],[o3Slider,"O3"],[pm25Slider,"PM2.5_24h"]];
 
-				pm10Slider.select(".slider-indicator")
-						.transition()
-						.attr("transform", "translate("+slider_pm10(+data.pm10_24h)+",-5)")
+				updateIndicator(air);
 
-				coSlider.select(".slider-indicator")
-						.transition()
-						.attr("transform", "translate("+slider_co(+data.CO_24h)+",-5)")
-
-				o3Slider.select(".slider-indicator")
-						.transition()
-						.attr("transform", "translate("+slider_o3(+data.O3)+",-5)")
-
-				pm25Slider.select(".slider-indicator")
-						.transition()
-						.attr("transform", "translate("+slider_pm25(+data["PM2.5_24h"])+",-5)")
 			}
 
 		})
