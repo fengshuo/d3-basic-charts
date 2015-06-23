@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Reusable</title>
+		<style>
+			body{
+				font:10px arial;
+			}
+
+			.axis path,
+			.axis line{
+				fill:none;
+				stroke:#000;
+			}
+
+			.line {
+			  fill: none;
+				stroke:steelblue;
+			  stroke-width: 2.5px;
+			}
+		</style>
+		<script src="../lib/d3.js"></script>
+</head>
+<body>
+<script>
+window.onload = function(){
+	var data = [ { label: "Data Set 1",
+               x: [0, 1, 2, 3, 4],
+               y: [0, 1, 2, 3, 4] },
+             { label: "Data Set 2",
+               x: [0, 1, 2, 3, 4],
+               y: [0, 1, 4, 9, 16] } ] ;
+
+	var line_chart = d3_line_chart()
+									.width(900)
+									.height(600);
+
+	var svg = d3.select("body").append("svg")
+						.datum(data)
+						.call(line_chart);
+
+	function d3_line_chart(){
+		var width = 600;
+		var height = 500;
+
+		function chart(selection){
+	  	selection.each(function(dataset){
+				// append one svg, dataset is the same as data
+
+				// initial settings
+				var margin = {
+					top:20,
+					right:20,
+					bottom:50,
+					left:50
+				};
+
+				var innerWidth = width - margin.left - margin.right;
+				var innerHeight = height - margin.top - margin.bottom;
+
+				var xScale = d3.scale.linear()
+										.range([0, innerWidth])
+										.domain([
+											d3.min(dataset, function(d){
+												return d3.min(d.x);
+											}),
+											d3.max(dataset, function(d){
+												return d3.max(d.x);
+											})
+										]);
+
+				var yScale = d3.scale.linear()
+										.range([innerHeight,0])
+										.domain([
+											d3.min(dataset, function(d){
+												return d3.min(d.y);
+											}),
+											d3.max(dataset, function(d){
+												return d3.max(d.y);
+											})
+										]);
+
+				var xAxis = d3.svg.axis()
+										.scale(xScale)
+										.orient("bottom");
+
+				var yAxis = d3.svg.axis()
+										.scale(yScale)
+										.orient("left");
+
+
+				// for selection.call()
+				// The this context of the called function is also the current selection
+				var svg = d3.select(this)
+									.attr({
+										"width":width,
+										"height":height
+									})
+									.append("g")
+									.attr("transform","translate("+margin.left+","+margin.top+")");
+
+				var lineGenerator = d3.svg.line()
+														.interpolate("basis")
+														.x(function(d){
+															return xScale(d[0])
+														})
+														.y(function(d){
+															return yScale(d[1])
+														});
+
+				// process data for line
+				var lines = svg.selectAll(".line-group")
+									.data(dataset.map(function(d){
+										return d3.zip(d.x, d.y);
+									}))
+									.enter().append("g")
+									.attr("class","line-group");
+
+				lines.append("path")
+				.attr("d", function(d){
+					return lineGenerator(d);
+				})
+				.attr("class","line")
+
+
+				svg.append("g")
+						.attr("class","x axis")
+						.attr("transform","translate(0,"+innerHeight+")")
+						.call(xAxis);
+
+				svg.append("g")
+						.attr("class","y axis")
+						.call(yAxis);
+
+			})
+		}
+
+		chart.width = function(value){
+			if(!arguments.length){
+				return width;
+			}
+			width = value;
+			return chart;
+		};
+
+		chart.height = function(value){
+			if(!arguments.length){
+				return height;
+			}
+			height = value;
+			return chart;
+		};
+
+		return chart;
+	}
+
+
+};
+</script>
+</body>
+</html>
